@@ -15,7 +15,7 @@ def _():
 
 
 @app.cell
-def _():
+def load_model():
     # load model
     from pathlib import Path
     import roadrunner
@@ -30,75 +30,106 @@ def _():
         "[Cve_m2]": "µM", 
         "Aurine_m1_m2": "µmole"
     }
-    units_factors = units = {
+    units_factors = {
         "time": 1.0/60, 
         "[Cve_gli]": 1000.0, 
         "[Cve_m1]": 1000.0, 
         "[Cve_m2]": 1000.0, 
         "Aurine_m1_m2": 1000.0
     }
-    return r, units_factors
+    labels = {
+        "time": "Time [hr]", 
+        "[Cve_gli]": "Glimepiride Plasma [µM]", 
+        "[Cve_m1]": "M1 Plasma [µM]", 
+        "[Cve_m2]": "M2 Plasma [µM]", 
+        "Aurine_m1_m2": "M1 + M2 Urine [µmole]"
+    }
+    return labels, r, units_factors
 
 
 @app.cell
-def _(mo):
+def settings(mo):
     # settings
-    PODOSE_gli = mo.ui.slider(start=0.0, stop=10.0, value=2.0, label="Glimepiride Dose [mg]")
-    BW = mo.ui.slider(start=40, stop=170.0, value=70.0, label="Bodyweight [kg]")
-    return BW, PODOSE_gli
+    PODOSE_gli = mo.ui.slider(start=0.0, stop=8.0, value=4.0, label="Glimepiride Dose [mg]")
+
+    BW = mo.ui.slider(start=40, stop=170.0, value=75.0, label="Bodyweight [kg]")
+
+    f_cirrhosis = mo.ui.slider(start=0.0, stop=0.95, value=0.0, step=0.01, label="Cirrhosis Degree")
+
+    crcl = mo.ui.slider(start=10, stop=150, value=110, step=5, label="Creatinine Clearance [mL/min]")
+
+    return BW, PODOSE_gli, f_cirrhosis, crcl
 
 
 @app.cell(hide_code=True)
-def _(BW, PODOSE_gli, mo):
+def display(BW, PODOSE_gli, f_cirrhosis, crcl, mo):
     mo.md(
         f"""
     ## Simulation of glimepiride model
-
     {PODOSE_gli}
-
     {BW}
+    {f_cirrhosis}
+    {crcl}
     """
     )
     return
 
 
 @app.cell
-def _(df):
+def gli_plasma(df, labels):
     import plotly.express as px
-    fig1 = px.line(df, x="time", y="[Cve_gli]", title='Glimepiride plasma concentration', labels="test", markers=True)
+    fig1 = px.line(df, x="time", y="[Cve_gli]", title=None, labels=labels, markers=True, range_y=[0, 1])
     fig1
     return (px,)
 
 
 @app.cell
-def _(df, px):
-    fig2 = px.line(df, x="time", y="[Cve_m1]", title='M1 plasma concentration', labels="test", markers=True)
+def m1_plasma(df, labels, px):
+    fig2 = px.line(df, x="time", y="[Cve_m1]", title=None, labels=labels, markers=True, range_y=[0, 0.3])
     fig2
     return
 
 
 @app.cell
-def _(df, px):
-    fig3 = px.line(df, x="time", y="[Cve_m2]", title='M1 plasma concentration', labels="test", markers=True)
+def m2_plasma(df, labels, px):
+    fig3 = px.line(df, x="time", y="[Cve_m2]", title=None, labels=labels, markers=True, range_y=[0, 0.1])
     fig3
     return
 
 
 @app.cell
-def _(df, px):
-    fig4 = px.line(df, x="time", y="Aurine_m1_m2", title='M1 plasma concentration', labels="test", markers=True)
+def m1_m2_urine(df, labels, px):
+    fig4 = px.line(df, x="time", y="Aurine_m1_m2", title=None, labels=labels, markers=True, range_y=[0, 10])
     fig4
     return
 
 
 @app.cell
-def _(BW, PODOSE_gli, r: "roadrunner.RoadRunner", units_factors):
+def calculate_renal_function(crcl):
+    """Convert CrCl to f_renal_function."""
+    normal_crcl = 110.0  # mL/min (eGFR 100 + 10% overestimation)
+    # Calculate f_renal_function for model
+    f_renal_function = min(crcl.value / normal_crcl, 1.0)
+    return f_renal_function
+
+
+@app.cell
+def simulation(
+    BW,
+    PODOSE_gli,
+    f_cirrhosis,
+    f_renal_function,
+    r: "roadrunner.RoadRunner",
+    units_factors,
+):
     # simulation
     import pandas as pd
 
     r.resetAll()
     r.setValue("PODOSE_gli", PODOSE_gli.value)  # [mg]
     r.setValue("BW", BW.value)  # [kg]
+    r.setValue("f_cirrhosis", f_cirrhosis.value)  # [-]
+    r.setValue("KI__f_renal_function", f_renal_function)  # [dimensionless]
     s = r.simulate(start=0, end=60*48, steps=1000)  # [min]
     df = pd.DataFrame(s, columns=s.colnames)
     # unit conversions
