@@ -1,0 +1,13 @@
+[project]
+name = "glimepiride-app"
+version = "0.1.0"
+description = "Glimepiride App - A web application for the glimepiride Digital Twin."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "marimo[recommended]",
+    "libroadrunner>=2.8.0",
+    "pandas>=2.2.3",
+    "matplotlib",
+    "plotly",
+]
