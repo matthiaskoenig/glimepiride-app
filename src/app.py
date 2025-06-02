@@ -3,7 +3,7 @@
 import marimo
 
 __generated_with = "0.13.15"
-app = marimo.App(width="medium", layout_file="layouts/app.grid.json")
+app = marimo.App(layout_file="layouts/app.grid.json")
 
 
 @app.cell
@@ -63,23 +63,6 @@ def _(BW, PODOSE_gli, mo):
 
 
 @app.cell
-def _(BW, PODOSE_gli, r: "roadrunner.RoadRunner", units_factors):
-    # simulation
-    import pandas as pd
-
-    r.resetAll()
-    r.setValue("PODOSE_gli", PODOSE_gli.value)  # [mg]
-    r.setValue("BW", BW.value)  # [kg]
-    s = r.simulate(start=0, end=60*48, steps=1000)  # [min]
-    df = pd.DataFrame(s, columns=s.colnames)
-    # unit conversions
-    for col in df.columns:
-        df[col] = df[col] * units_factors[col]  # [hr]
-    df
-    return (df,)
-
-
-@app.cell
 def _(df):
     import plotly.express as px
     fig1 = px.line(df, x="time", y="[Cve_gli]", title='Glimepiride plasma concentration', labels="test", markers=True)
@@ -106,6 +89,23 @@ def _(df, px):
     fig4 = px.line(df, x="time", y="Aurine_m1_m2", title='M1 plasma concentration', labels="test", markers=True)
     fig4
     return
+
+
+@app.cell
+def _(BW, PODOSE_gli, r: "roadrunner.RoadRunner", units_factors):
+    # simulation
+    import pandas as pd
+
+    r.resetAll()
+    r.setValue("PODOSE_gli", PODOSE_gli.value)  # [mg]
+    r.setValue("BW", BW.value)  # [kg]
+    s = r.simulate(start=0, end=60*48, steps=1000)  # [min]
+    df = pd.DataFrame(s, columns=s.colnames)
+    # unit conversions
+    for col in df.columns:
+        df[col] = df[col] * units_factors[col]  # [hr]
+    df
+    return (df,)
 
 
 if __name__ == "__main__":

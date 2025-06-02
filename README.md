@@ -1,18 +1,19 @@
 # Glimepiride webapp
 
 ## Installation
-
 ```
 uv venv
 uv sync
 ```
 
 ## Edit app
-```
+```bash
 cd src
 marimo edit app.py
 ```
 
-## TODO
-- [ ] get latest model version
-- [ ] simulation example
+## Run app
+```bash
+cd src
+marimo run app.py 
+```
