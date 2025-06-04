@@ -7,7 +7,7 @@ app = marimo.App(layout_file="layouts/app.grid.json")
 
 
 @app.cell
-def _():
+def setup():
     import marimo as mo
 
     mo.md("# Welcome to Glimepiride Webapp!")
@@ -50,19 +50,26 @@ def load_model():
 @app.cell
 def settings(mo):
     # settings
-    PODOSE_gli = mo.ui.slider(start=0.0, stop=8.0, value=4.0, label="Glimepiride Dose [mg]")
-
+    PODOSE_gli = mo.ui.slider(start=0.0, stop=8.0, value=4.0, step=1.0, label="Glimepiride Dose [mg]")
     BW = mo.ui.slider(start=40, stop=170.0, value=75.0, label="Bodyweight [kg]")
-
     f_cirrhosis = mo.ui.slider(start=0.0, stop=0.95, value=0.0, step=0.01, label="Cirrhosis Degree")
+    crcl = mo.ui.slider(start=10, stop=150, value=110, step=1.0, label="Creatinine Clearance [mL/min]")
+    cyp2c9_allele1 = mo.ui.slider(start=0, stop=150, value=100, step=1.0, label="CYP2C9 Allele 1 Activity [%]")
+    cyp2c9_allele2 = mo.ui.slider(start=0, stop=150, value=100, step=1.0, label="CYP2C9 Allele 2 Activity [%]")
 
-    crcl = mo.ui.slider(start=10, stop=150, value=110, step=5, label="Creatinine Clearance [mL/min]")
-
-    return BW, PODOSE_gli, f_cirrhosis, crcl
+    return BW, PODOSE_gli, crcl, cyp2c9_allele1, cyp2c9_allele2, f_cirrhosis
 
 
 @app.cell(hide_code=True)
-def display(BW, PODOSE_gli, f_cirrhosis, crcl, mo):
+def display(
+    BW,
+    PODOSE_gli,
+    crcl,
+    cyp2c9_allele1,
+    cyp2c9_allele2,
+    f_cirrhosis,
+    mo,
+):
     mo.md(
         f"""
     ## Simulation of glimepiride model
@@ -70,6 +77,8 @@ def display(BW, PODOSE_gli, f_cirrhosis, crcl, mo):
     {BW}
     {f_cirrhosis}
     {crcl}
+    {cyp2c9_allele1}
+    {cyp2c9_allele2}
     """
     )
     return
@@ -110,7 +119,15 @@ def calculate_renal_function(crcl):
     normal_crcl = 110.0  # mL/min (eGFR 100 + 10% overestimation)
     # Calculate f_renal_function for model
     f_renal_function = min(crcl.value / normal_crcl, 1.0)
-    return f_renal_function
+    return (f_renal_function,)
+
+
+@app.cell
+def calculate_cyp2c9_activity(cyp2c9_allele1, cyp2c9_allele2):
+    """Calculate f_cyp2c9 from the two allele activities."""
+    # Calculate mean activity
+    f_cyp2c9 = (cyp2c9_allele1.value + cyp2c9_allele2.value) / 2.0 / 100.0
+    return (f_cyp2c9,)
 
 
 @app.cell
@@ -118,6 +135,7 @@ def simulation(
     BW,
     PODOSE_gli,
     f_cirrhosis,
+    f_cyp2c9,
     f_renal_function,
     r: "roadrunner.RoadRunner",
     units_factors,
@@ -128,8 +146,9 @@ def simulation(
     r.resetAll()
     r.setValue("PODOSE_gli", PODOSE_gli.value)  # [mg]
     r.setValue("BW", BW.value)  # [kg]
-    r.setValue("f_cirrhosis", f_cirrhosis.value)  # [-]
-    r.setValue("KI__f_renal_function", f_renal_function)  # [dimensionless]
+    r.setValue("f_cirrhosis", f_cirrhosis.value)
+    r.setValue("KI__f_renal_function", f_renal_function)
+    r.setValue("LI__f_cyp2c9", f_cyp2c9)
     s = r.simulate(start=0, end=60*48, steps=1000)  # [min]
     df = pd.DataFrame(s, columns=s.colnames)
     # unit conversions
