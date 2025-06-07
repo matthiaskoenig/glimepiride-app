@@ -5,13 +5,10 @@ import marimo
 __generated_with = "0.13.15"
 app = marimo.App(layout_file="layouts/app.grid.json")
 
-
-@app.cell
-def setup():
+with app.setup:
     import marimo as mo
 
     mo.md("# Welcome to Glimepiride Webapp!")
-    return (mo,)
 
 
 @app.cell
@@ -48,68 +45,32 @@ def load_model():
 
 
 @app.cell
-def settings(mo):
-    # settings
+def settings():
     PODOSE_gli = mo.ui.slider(start=0.0, stop=8.0, value=4.0, step=1.0, label="Glimepiride Dose [mg]")
     BW = mo.ui.slider(start=40, stop=170.0, value=75.0, label="Bodyweight [kg]")
-    f_cirrhosis = mo.ui.slider(start=0.0, stop=0.95, value=0.0, step=0.01, label="Cirrhosis Degree")
     crcl = mo.ui.slider(start=10, stop=150, value=110, step=1.0, label="Creatinine Clearance [mL/min]")
+    f_cirrhosis = mo.ui.slider(start=0.0, stop=0.95, value=0.0, step=0.01, label="Cirrhosis Degree")
     cyp2c9_allele1 = mo.ui.slider(start=0, stop=150, value=100, step=1.0, label="CYP2C9 Allele 1 Activity [%]")
     cyp2c9_allele2 = mo.ui.slider(start=0, stop=150, value=100, step=1.0, label="CYP2C9 Allele 2 Activity [%]")
 
     return BW, PODOSE_gli, crcl, cyp2c9_allele1, cyp2c9_allele2, f_cirrhosis
 
 
-@app.cell(hide_code=True)
-def display(
-    BW,
-    PODOSE_gli,
-    crcl,
-    cyp2c9_allele1,
-    cyp2c9_allele2,
-    f_cirrhosis,
-    mo,
-):
+@app.cell
+def display(BW, PODOSE_gli, crcl, cyp2c9_allele1, cyp2c9_allele2, f_cirrhosis):
     mo.md(
         f"""
     ## Simulation of glimepiride model
-    {PODOSE_gli}
-    {BW}
-    {f_cirrhosis}
-    {crcl}
-    {cyp2c9_allele1}
-    {cyp2c9_allele2}
+    {mo.vstack([
+        PODOSE_gli,
+        BW,
+        f_cirrhosis,
+        crcl,
+        cyp2c9_allele1,
+        cyp2c9_allele2
+    ])}
     """
     )
-    return
-
-
-@app.cell
-def gli_plasma(df, labels):
-    import plotly.express as px
-    fig1 = px.line(df, x="time", y="[Cve_gli]", title=None, labels=labels, markers=True, range_y=[0, 1])
-    fig1
-    return (px,)
-
-
-@app.cell
-def m1_plasma(df, labels, px):
-    fig2 = px.line(df, x="time", y="[Cve_m1]", title=None, labels=labels, markers=True, range_y=[0, 0.3])
-    fig2
-    return
-
-
-@app.cell
-def m2_plasma(df, labels, px):
-    fig3 = px.line(df, x="time", y="[Cve_m2]", title=None, labels=labels, markers=True, range_y=[0, 0.1])
-    fig3
-    return
-
-
-@app.cell
-def m1_m2_urine(df, labels, px):
-    fig4 = px.line(df, x="time", y="Aurine_m1_m2", title=None, labels=labels, markers=True, range_y=[0, 10])
-    fig4
     return
 
 
@@ -131,6 +92,23 @@ def calculate_cyp2c9_activity(cyp2c9_allele1, cyp2c9_allele2):
 
 
 @app.cell
+def plots(df, labels):
+    import plotly.express as px
+
+    height = 400
+    width = 450
+
+    fig1 = px.line(df, x="time", y="[Cve_gli]", title="Glimepiride Plasma", labels=labels, markers=True, range_y=[0, 1], range_x=[0, 25], height=height, width=width)
+    fig2 = px.line(df, x="time", y="[Cve_m1]", title="M1 Plasma", labels=labels, markers=True, range_y=[0, 0.3], range_x=[0, 25], height=height, width=width)
+    fig3 = px.line(df, x="time", y="[Cve_m2]", title="M2 Plasma", labels=labels, markers=True, range_y=[0, 0.1], range_x=[0, 25], height=height, width=width)
+    fig4 = px.line(df, x="time", y="Aurine_m1_m2", title="M1 + M2 Urine", labels=labels, markers=True, range_y=[0, 10], height=height, width=width)
+
+    # Plots in one row with tight spacing
+    mo.hstack([fig1, fig2, fig3, fig4], gap=0)
+    return
+
+
+@app.cell
 def simulation(
     BW,
     PODOSE_gli,
@@ -149,7 +127,7 @@ def simulation(
     r.setValue("f_cirrhosis", f_cirrhosis.value)
     r.setValue("KI__f_renal_function", f_renal_function)
     r.setValue("LI__f_cyp2c9", f_cyp2c9)
-    s = r.simulate(start=0, end=60*48, steps=1000)  # [min]
+    s = r.simulate(start=0, end=60*50, steps=5000)  # [min]
     df = pd.DataFrame(s, columns=s.colnames)
     # unit conversions
     for col in df.columns:
