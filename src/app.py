@@ -7,7 +7,6 @@ app = marimo.App(layout_file="layouts/app.grid.json")
 
 with app.setup:
     import marimo as mo
-
     mo.md("# Welcome to Glimepiride Webapp!")
 
 
@@ -45,29 +44,88 @@ def load_model():
 
 
 @app.cell
-def settings():
+def allele_state():
+    # State management
+    allele1_activity, set_allele1_activity = mo.state(100)  # Default *1
+    allele2_activity, set_allele2_activity = mo.state(100)  # Default *1
+    allele_activities = {"*1": 100, "*2": 63, "*3": 23}
+
+    return (
+        allele1_activity,
+        allele2_activity,
+        allele_activities,
+        set_allele1_activity,
+        set_allele2_activity,
+    )
+
+
+@app.cell
+def settings(
+    allele1_activity,
+    allele2_activity,
+    allele_activities,
+    set_allele1_activity,
+    set_allele2_activity,
+):
+    # Map activity to allele name
+    def get_allele_name(activity):
+        for allele, act in allele_activities.items():
+            if act == activity:
+                return allele
+        return "Custom"
+
+    #  UI elements
     PODOSE_gli = mo.ui.slider(start=0.0, stop=8.0, value=4.0, step=1.0, label="Glimepiride Dose [mg]")
     BW = mo.ui.slider(start=40, stop=170.0, value=75.0, label="Bodyweight [kg]")
     crcl = mo.ui.slider(start=10, stop=150, value=110, step=1.0, label="Creatinine Clearance [mL/min]")
     f_cirrhosis = mo.ui.slider(start=0.0, stop=0.95, value=0.0, step=0.01, label="Cirrhosis Degree")
-    cyp2c9_allele1 = mo.ui.slider(start=0, stop=150, value=100, step=1.0, label="CYP2C9 Allele 1 Activity [%]")
-    cyp2c9_allele2 = mo.ui.slider(start=0, stop=150, value=100, step=1.0, label="CYP2C9 Allele 2 Activity [%]")
 
-    return BW, PODOSE_gli, crcl, cyp2c9_allele1, cyp2c9_allele2, f_cirrhosis
+    ## CYP2C9
+    cyp2c9_allele1_slider = mo.ui.slider(start=0, stop=100, value=allele1_activity(), step=1.0, label="CYP2C9 Allele 1 Activity [%]", on_change=set_allele1_activity)
+    cyp2c9_allele2_slider = mo.ui.slider( start=0, stop=100, value=allele2_activity(), step=1.0, label="CYP2C9 Allele 2 Activity [%]", on_change=set_allele2_activity)
+    # Update dropdown
+    def update_allele1(allele_type):
+        if allele_type in allele_activities:
+            set_allele1_activity(allele_activities[allele_type])
+    def update_allele2(allele_type):
+        if allele_type in allele_activities:
+            set_allele2_activity(allele_activities[allele_type])
+    cyp2c9_allele1_dropdown = mo.ui.dropdown( options=["*1", "*2", "*3", "Custom"], value=get_allele_name(allele1_activity()), label="Allele 1 Type", on_change=update_allele1)
+    cyp2c9_allele2_dropdown = mo.ui.dropdown(options=["*1", "*2", "*3", "Custom"], value=get_allele_name(allele2_activity()), label="Allele 2 Type", on_change=update_allele2)
+
+    return (
+        BW,
+        PODOSE_gli,
+        crcl,
+        cyp2c9_allele1_dropdown,
+        cyp2c9_allele1_slider,
+        cyp2c9_allele2_dropdown,
+        cyp2c9_allele2_slider,
+        f_cirrhosis,
+    )
 
 
 @app.cell
-def display(BW, PODOSE_gli, crcl, cyp2c9_allele1, cyp2c9_allele2, f_cirrhosis):
+def display(
+    BW,
+    PODOSE_gli,
+    crcl,
+    cyp2c9_allele1_dropdown,
+    cyp2c9_allele1_slider,
+    cyp2c9_allele2_dropdown,
+    cyp2c9_allele2_slider,
+    f_cirrhosis,
+):
     mo.md(
         f"""
-    ## Simulation of glimepiride model
+    ## Patient-Specific Parameters
     {mo.vstack([
         PODOSE_gli,
         BW,
         f_cirrhosis,
         crcl,
-        cyp2c9_allele1,
-        cyp2c9_allele2
+        mo.hstack([cyp2c9_allele1_dropdown, cyp2c9_allele1_slider], gap=0),
+        mo.hstack([cyp2c9_allele2_dropdown, cyp2c9_allele2_slider], gap=0)
     ])}
     """
     )
@@ -84,10 +142,10 @@ def calculate_renal_function(crcl):
 
 
 @app.cell
-def calculate_cyp2c9_activity(cyp2c9_allele1, cyp2c9_allele2):
+def calculate_cyp2c9_activity(allele1_activity, allele2_activity):
     """Calculate f_cyp2c9 from the two allele activities."""
-    # Calculate mean activity
-    f_cyp2c9 = (cyp2c9_allele1.value + cyp2c9_allele2.value) / 2.0 / 100.0
+    # Calculate mean activity using state values directly
+    f_cyp2c9 = (allele1_activity() + allele2_activity()) / 2.0 / 100.0
     return (f_cyp2c9,)
 
 
@@ -99,7 +157,7 @@ def plots(df, labels):
     width = 450
 
     fig1 = px.line(df, x="time", y="[Cve_gli]", title="Glimepiride Plasma", labels=labels, markers=True, range_y=[0, 1], range_x=[0, 25], height=height, width=width)
-    fig2 = px.line(df, x="time", y="[Cve_m1]", title="M1 Plasma", labels=labels, markers=True, range_y=[0, 0.3], range_x=[0, 25], height=height, width=width)
+    fig2 = px.line(df, x="time", y="[Cve_m1]", title="M1 Plasma", labels=labels, markers=True, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
     fig3 = px.line(df, x="time", y="[Cve_m2]", title="M2 Plasma", labels=labels, markers=True, range_y=[0, 0.1], range_x=[0, 25], height=height, width=width)
     fig4 = px.line(df, x="time", y="Aurine_m1_m2", title="M1 + M2 Urine", labels=labels, markers=True, range_y=[0, 10], height=height, width=width)
 
