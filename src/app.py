@@ -71,6 +71,20 @@ def cirrhosis_state():
 
 
 @app.cell
+def renal_impairment_state():
+    normal_crcl = 110.0
+    crcl_map = {
+        "Normal": normal_crcl * 1.0,
+        "Mild Impairment": normal_crcl * 0.69,
+        "Moderate Impairment": normal_crcl * 0.32,
+        "Severe Impairment": normal_crcl * 0.19,
+    }
+    crcl_value, set_crcl_value = mo.state(110)  # Default normal
+
+    return crcl_map, crcl_value, normal_crcl, set_crcl_value
+
+
+@app.cell
 def cyp2c9_allele_dropdowns(
     allele1_activity,
     allele2_activity,
@@ -87,7 +101,6 @@ def cyp2c9_allele_dropdowns(
     cyp2c9_allele1_dropdown = mo.ui.dropdown(
         options=["*1", "*2", "*3", "Custom"],
         value=get_allele_name(allele1_activity()),
-        # label="CYP2C9 Allele 1",
         on_change=lambda allele_type: set_allele1_activity(
             allele_activities[allele_type]) if allele_type in allele_activities else None
     )
@@ -95,7 +108,6 @@ def cyp2c9_allele_dropdowns(
     cyp2c9_allele2_dropdown = mo.ui.dropdown(
         options=["*1", "*2", "*3", "Custom"],
         value=get_allele_name(allele2_activity()),
-        # label=" ",
         on_change=lambda allele_type: set_allele2_activity(
             allele_activities[allele_type]) if allele_type in allele_activities else None
     )
@@ -106,21 +118,37 @@ def cyp2c9_allele_dropdowns(
 @app.cell
 def cirrhosis_dropdown(cirrhosis_degree, cirrhosis_map, set_cirrhosis_degree):
     def get_cirrhosis_name(degree):
-        # Find closest match
         for name, value in cirrhosis_map.items():
-            if abs(value - degree) < 0.001:  # Small tolerance for float comparison
+            if value == degree:
                 return name
         return "Custom"
 
     cirrhosis_dropdown = mo.ui.dropdown(
         options=["Healthy", "Mild (CPT A)", "Moderate (CPT B)", "Severe (CPT C)", "Custom"],
         value=get_cirrhosis_name(cirrhosis_degree()),
-        # label=" ",
         on_change=lambda severity: set_cirrhosis_degree(
             cirrhosis_map[severity]) if severity in cirrhosis_map else None
     )
 
     return (cirrhosis_dropdown,)
+
+
+@app.cell
+def renal_dropdown(crcl_map, crcl_value, set_crcl_value):
+    def get_renal_category(crcl):
+        for category, preset_crcl in crcl_map.items():
+            if preset_crcl == crcl:
+                return category
+        return "Custom"
+
+    renal_impairment_dropdown = mo.ui.dropdown(
+        options=["Normal", "Mild Impairment", "Moderate Impairment", "Severe Impairment", "Custom"],
+        value=get_renal_category(crcl_value()),
+        on_change=lambda category: set_crcl_value(
+            crcl_map[category]) if category in crcl_map else None
+    )
+
+    return (renal_impairment_dropdown,)
 
 
 @app.cell
@@ -166,12 +194,24 @@ def cirrhosis_slider(cirrhosis_degree, set_cirrhosis_degree):
 
 
 @app.cell
+def crcl_slider(crcl_value, set_crcl_value):
+    crcl = mo.ui.slider(
+        start=1,
+        stop=110,
+        value=crcl_value(),
+        step=1.0,
+        label="Creatinine Clearance [mL/min]",
+        on_change=set_crcl_value
+    )
+    return (crcl,)
+
+
+@app.cell
 def settings_other():
     PODOSE_gli = mo.ui.slider(start=0.0, stop=8.0, value=4.0, step=1.0, label="Glimepiride Dose [mg]")
     BW = mo.ui.slider(start=40, stop=170.0, value=75.0, label="Bodyweight [kg]")
-    crcl = mo.ui.slider(start=10, stop=150, value=110, step=1.0, label="Creatinine Clearance [mL/min]")
 
-    return BW, PODOSE_gli, crcl
+    return BW, PODOSE_gli
 
 
 @app.cell
@@ -185,6 +225,7 @@ def display(
     cyp2c9_allele2_dropdown,
     cyp2c9_allele2_slider,
     f_cirrhosis,
+    renal_impairment_dropdown,
 ):
     mo.md(
         f"""
@@ -193,7 +234,7 @@ def display(
         PODOSE_gli,
         BW,
         mo.hstack([f_cirrhosis, cirrhosis_dropdown], gap=0),
-        crcl,
+        mo.hstack([crcl, renal_impairment_dropdown], gap=0),
         mo.hstack([cyp2c9_allele1_slider, cyp2c9_allele1_dropdown], gap=0),
         mo.hstack([cyp2c9_allele2_slider, cyp2c9_allele2_dropdown], gap=0)
     ])}
@@ -203,17 +244,14 @@ def display(
 
 
 @app.cell
-def calculate_renal_function(crcl):
-    """Convert CrCl to f_renal_function."""
-    normal_crcl = 110.0  # mL/min (eGFR 100 + 10% overestimation)
-    # Calculate f_renal_function
-    f_renal_function = min(crcl.value / normal_crcl, 1.0)
+def calculate_renal_function(crcl_value, normal_crcl):
+    # Calculate f_renal_function from state value
+    f_renal_function = min(crcl_value() / normal_crcl, 1.0)
     return (f_renal_function,)
 
 
 @app.cell
 def calculate_cyp2c9_activity(allele1_activity, allele2_activity):
-    """Calculate f_cyp2c9 from the two allele activities."""
     # Calculate mean activity
     f_cyp2c9 = (allele1_activity() + allele2_activity()) / 2.0 / 100.0
     return (f_cyp2c9,)
@@ -237,7 +275,7 @@ def plots(df, labels):
     fig2 = px.line(df, x="time", y="[Cve_m1]", title=None, labels=labels, markers=True, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
     fig2.update_layout(xaxis=axis_style, yaxis=axis_style)
 
-    fig3 = px.line(df, x="time", y="[Cve_m2]", title=None, labels=labels, markers=True, range_y=[0, 0.1], range_x=[0, 25], height=height, width=width)
+    fig3 = px.line(df, x="time", y="[Cve_m2]", title=None, labels=labels, markers=True, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
     fig3.update_layout(xaxis=axis_style, yaxis=axis_style)
 
     fig4 = px.line(df, x="time", y="Aurine_m1_m2", title=None, labels=labels, markers=True, range_y=[0, 10], height=height, width=width)
