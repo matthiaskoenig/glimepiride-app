@@ -43,8 +43,7 @@ def load_model():
 
 
 @app.cell
-def allele_state():
-    # State management
+def cyp2c9_allele_state():
     allele1_activity, set_allele1_activity = mo.state(100)  # Default *1
     allele2_activity, set_allele2_activity = mo.state(100)  # Default *1
     allele_activities = {"*1": 100, "*2": 63, "*3": 23}
@@ -59,7 +58,20 @@ def allele_state():
 
 
 @app.cell
-def settings_dropdowns(
+def cirrhosis_state():
+    cirrhosis_degree, set_cirrhosis_degree = mo.state(0)  # Default Healthy
+    cirrhosis_map = {
+        "Healthy": 0,
+        "Mild (CPT A)": 0.3994897959183674,
+        "Moderate (CPT B)": 0.6979591836734694,
+        "Severe (CPT C)": 0.8127551020408164,
+    }
+
+    return cirrhosis_degree, cirrhosis_map, set_cirrhosis_degree
+
+
+@app.cell
+def cyp2c9_allele_dropdowns(
     allele1_activity,
     allele2_activity,
     allele_activities,
@@ -75,7 +87,7 @@ def settings_dropdowns(
     cyp2c9_allele1_dropdown = mo.ui.dropdown(
         options=["*1", "*2", "*3", "Custom"],
         value=get_allele_name(allele1_activity()),
-        label="Allele 1 Type",
+        # label="CYP2C9 Allele 1",
         on_change=lambda allele_type: set_allele1_activity(
             allele_activities[allele_type]) if allele_type in allele_activities else None
     )
@@ -83,7 +95,7 @@ def settings_dropdowns(
     cyp2c9_allele2_dropdown = mo.ui.dropdown(
         options=["*1", "*2", "*3", "Custom"],
         value=get_allele_name(allele2_activity()),
-        label="Allele 2 Type",
+        # label=" ",
         on_change=lambda allele_type: set_allele2_activity(
             allele_activities[allele_type]) if allele_type in allele_activities else None
     )
@@ -92,7 +104,27 @@ def settings_dropdowns(
 
 
 @app.cell
-def settings_sliders(
+def cirrhosis_dropdown(cirrhosis_degree, cirrhosis_map, set_cirrhosis_degree):
+    def get_cirrhosis_name(degree):
+        # Find closest match
+        for name, value in cirrhosis_map.items():
+            if abs(value - degree) < 0.001:  # Small tolerance for float comparison
+                return name
+        return "Custom"
+
+    cirrhosis_dropdown = mo.ui.dropdown(
+        options=["Healthy", "Mild (CPT A)", "Moderate (CPT B)", "Severe (CPT C)", "Custom"],
+        value=get_cirrhosis_name(cirrhosis_degree()),
+        # label=" ",
+        on_change=lambda severity: set_cirrhosis_degree(
+            cirrhosis_map[severity]) if severity in cirrhosis_map else None
+    )
+
+    return (cirrhosis_dropdown,)
+
+
+@app.cell
+def cyp2c9_allele_sliders(
     allele1_activity,
     allele2_activity,
     set_allele1_activity,
@@ -120,19 +152,33 @@ def settings_sliders(
 
 
 @app.cell
+def cirrhosis_slider(cirrhosis_degree, set_cirrhosis_degree):
+    f_cirrhosis = mo.ui.slider(
+        start=0.0,
+        stop=0.95,
+        value=cirrhosis_degree(),
+        step=0.01,
+        label="Cirrhosis Degree",
+        on_change=set_cirrhosis_degree
+    )
+
+    return (f_cirrhosis,)
+
+
+@app.cell
 def settings_other():
     PODOSE_gli = mo.ui.slider(start=0.0, stop=8.0, value=4.0, step=1.0, label="Glimepiride Dose [mg]")
     BW = mo.ui.slider(start=40, stop=170.0, value=75.0, label="Bodyweight [kg]")
     crcl = mo.ui.slider(start=10, stop=150, value=110, step=1.0, label="Creatinine Clearance [mL/min]")
-    f_cirrhosis = mo.ui.slider(start=0.0, stop=0.95, value=0.0, step=0.01, label="Cirrhosis Degree")
 
-    return BW, PODOSE_gli, crcl, f_cirrhosis
+    return BW, PODOSE_gli, crcl
 
 
 @app.cell
 def display(
     BW,
     PODOSE_gli,
+    cirrhosis_dropdown,
     crcl,
     cyp2c9_allele1_dropdown,
     cyp2c9_allele1_slider,
@@ -146,10 +192,10 @@ def display(
     {mo.vstack([
         PODOSE_gli,
         BW,
-        f_cirrhosis,
+        mo.hstack([f_cirrhosis, cirrhosis_dropdown], gap=0),
         crcl,
-        mo.hstack([cyp2c9_allele1_dropdown, cyp2c9_allele1_slider], gap=0),
-        mo.hstack([cyp2c9_allele2_dropdown, cyp2c9_allele2_slider], gap=0)
+        mo.hstack([cyp2c9_allele1_slider, cyp2c9_allele1_dropdown], gap=0),
+        mo.hstack([cyp2c9_allele2_slider, cyp2c9_allele2_dropdown], gap=0)
     ])}
     """
     )
@@ -180,10 +226,10 @@ def plots(df, labels):
     height = 400
     width = 450
 
-    fig1 = px.line(df, x="time", y="[Cve_gli]", title="Glimepiride Plasma", labels=labels, markers=True, range_y=[0, 1], range_x=[0, 25], height=height, width=width)
-    fig2 = px.line(df, x="time", y="[Cve_m1]", title="M1 Plasma", labels=labels, markers=True, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
-    fig3 = px.line(df, x="time", y="[Cve_m2]", title="M2 Plasma", labels=labels, markers=True, range_y=[0, 0.1], range_x=[0, 25], height=height, width=width)
-    fig4 = px.line(df, x="time", y="Aurine_m1_m2", title="M1 + M2 Urine", labels=labels, markers=True, range_y=[0, 10], height=height, width=width)
+    fig1 = px.line(df, x="time", y="[Cve_gli]", title=" ", labels=labels, markers=True, range_y=[0, 1], range_x=[0, 25], height=height, width=width)
+    fig2 = px.line(df, x="time", y="[Cve_m1]", title=" ", labels=labels, markers=True, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
+    fig3 = px.line(df, x="time", y="[Cve_m2]", title=" ", labels=labels, markers=True, range_y=[0, 0.1], range_x=[0, 25], height=height, width=width)
+    fig4 = px.line(df, x="time", y="Aurine_m1_m2", title=" ", labels=labels, markers=True, range_y=[0, 10], height=height, width=width)
     mo.hstack([fig1, fig2, fig3, fig4], gap=0)
     return
 
