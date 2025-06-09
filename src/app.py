@@ -33,11 +33,11 @@ def load_model():
         "Aurine_m1_m2": 1000.0
     }
     labels = {
-        "time": "Time [hr]", 
-        "[Cve_gli]": "Glimepiride Plasma [µM]", 
-        "[Cve_m1]": "M1 Plasma [µM]", 
-        "[Cve_m2]": "M2 Plasma [µM]", 
-        "Aurine_m1_m2": "M1 + M2 Urine [µmole]"
+        "time": "<b>Time [hr]</b>",
+        "[Cve_gli]": "<b>Glimepiride Plasma [µM]</b>",
+        "[Cve_m1]": "<b>M1 Plasma [µM]</b>",
+        "[Cve_m2]": "<b>M2 Plasma [µM]</b>",
+        "Aurine_m1_m2": "<b>M1 + M2 Urine [µmole]</b>"
     }
     return labels, r, units_factors
 
@@ -226,10 +226,23 @@ def plots(df, labels):
     height = 400
     width = 450
 
-    fig1 = px.line(df, x="time", y="[Cve_gli]", title=" ", labels=labels, markers=True, range_y=[0, 1], range_x=[0, 25], height=height, width=width)
-    fig2 = px.line(df, x="time", y="[Cve_m1]", title=" ", labels=labels, markers=True, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
-    fig3 = px.line(df, x="time", y="[Cve_m2]", title=" ", labels=labels, markers=True, range_y=[0, 0.1], range_x=[0, 25], height=height, width=width)
-    fig4 = px.line(df, x="time", y="Aurine_m1_m2", title=" ", labels=labels, markers=True, range_y=[0, 10], height=height, width=width)
+    axis_style = {
+        "title_font": {"size": 17},
+        "tickfont": {"size": 15}
+    }
+
+    fig1 = px.line(df, x="time", y="[Cve_gli]", title=None, labels=labels, markers=True, range_y=[0, 1], range_x=[0, 25], height=height, width=width)
+    fig1.update_layout(xaxis=axis_style, yaxis=axis_style)
+
+    fig2 = px.line(df, x="time", y="[Cve_m1]", title=None, labels=labels, markers=True, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
+    fig2.update_layout(xaxis=axis_style, yaxis=axis_style)
+
+    fig3 = px.line(df, x="time", y="[Cve_m2]", title=None, labels=labels, markers=True, range_y=[0, 0.1], range_x=[0, 25], height=height, width=width)
+    fig3.update_layout(xaxis=axis_style, yaxis=axis_style)
+
+    fig4 = px.line(df, x="time", y="Aurine_m1_m2", title=None, labels=labels, markers=True, range_y=[0, 10], height=height, width=width)
+    fig4.update_layout(xaxis=axis_style, yaxis=axis_style)
+
     mo.hstack([fig1, fig2, fig3, fig4], gap=0)
     return
 
