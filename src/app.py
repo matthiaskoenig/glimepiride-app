@@ -12,7 +12,6 @@ with app.setup:
 
 @app.cell
 def load_model():
-    # load model
     from pathlib import Path
     import roadrunner
     model_path = Path(__file__).parent.parent / "model" / "glimepiride_body_flat.xml"
@@ -60,49 +59,74 @@ def allele_state():
 
 
 @app.cell
-def settings(
+def settings_dropdowns(
     allele1_activity,
     allele2_activity,
     allele_activities,
     set_allele1_activity,
     set_allele2_activity,
 ):
-    # Map activity to allele name
     def get_allele_name(activity):
         for allele, act in allele_activities.items():
             if act == activity:
                 return allele
         return "Custom"
 
-    #  UI elements
+    cyp2c9_allele1_dropdown = mo.ui.dropdown(
+        options=["*1", "*2", "*3", "Custom"],
+        value=get_allele_name(allele1_activity()),
+        label="Allele 1 Type",
+        on_change=lambda allele_type: set_allele1_activity(
+            allele_activities[allele_type]) if allele_type in allele_activities else None
+    )
+
+    cyp2c9_allele2_dropdown = mo.ui.dropdown(
+        options=["*1", "*2", "*3", "Custom"],
+        value=get_allele_name(allele2_activity()),
+        label="Allele 2 Type",
+        on_change=lambda allele_type: set_allele2_activity(
+            allele_activities[allele_type]) if allele_type in allele_activities else None
+    )
+
+    return cyp2c9_allele1_dropdown, cyp2c9_allele2_dropdown
+
+
+@app.cell
+def settings_sliders(
+    allele1_activity,
+    allele2_activity,
+    set_allele1_activity,
+    set_allele2_activity,
+):
+    cyp2c9_allele1_slider = mo.ui.slider(
+        start=0,
+        stop=100,
+        value=allele1_activity(),
+        step=1.0,
+        label="CYP2C9 Allele 1 Activity [%]",
+        on_change=set_allele1_activity
+    )
+
+    cyp2c9_allele2_slider = mo.ui.slider(
+        start=0,
+        stop=100,
+        value=allele2_activity(),
+        step=1.0,
+        label="CYP2C9 Allele 2 Activity [%]",
+        on_change=set_allele2_activity
+    )
+
+    return cyp2c9_allele1_slider, cyp2c9_allele2_slider
+
+
+@app.cell
+def settings_other():
     PODOSE_gli = mo.ui.slider(start=0.0, stop=8.0, value=4.0, step=1.0, label="Glimepiride Dose [mg]")
     BW = mo.ui.slider(start=40, stop=170.0, value=75.0, label="Bodyweight [kg]")
     crcl = mo.ui.slider(start=10, stop=150, value=110, step=1.0, label="Creatinine Clearance [mL/min]")
     f_cirrhosis = mo.ui.slider(start=0.0, stop=0.95, value=0.0, step=0.01, label="Cirrhosis Degree")
 
-    ## CYP2C9
-    cyp2c9_allele1_slider = mo.ui.slider(start=0, stop=100, value=allele1_activity(), step=1.0, label="CYP2C9 Allele 1 Activity [%]", on_change=set_allele1_activity)
-    cyp2c9_allele2_slider = mo.ui.slider( start=0, stop=100, value=allele2_activity(), step=1.0, label="CYP2C9 Allele 2 Activity [%]", on_change=set_allele2_activity)
-    # Update dropdown
-    def update_allele1(allele_type):
-        if allele_type in allele_activities:
-            set_allele1_activity(allele_activities[allele_type])
-    def update_allele2(allele_type):
-        if allele_type in allele_activities:
-            set_allele2_activity(allele_activities[allele_type])
-    cyp2c9_allele1_dropdown = mo.ui.dropdown( options=["*1", "*2", "*3", "Custom"], value=get_allele_name(allele1_activity()), label="Allele 1 Type", on_change=update_allele1)
-    cyp2c9_allele2_dropdown = mo.ui.dropdown(options=["*1", "*2", "*3", "Custom"], value=get_allele_name(allele2_activity()), label="Allele 2 Type", on_change=update_allele2)
-
-    return (
-        BW,
-        PODOSE_gli,
-        crcl,
-        cyp2c9_allele1_dropdown,
-        cyp2c9_allele1_slider,
-        cyp2c9_allele2_dropdown,
-        cyp2c9_allele2_slider,
-        f_cirrhosis,
-    )
+    return BW, PODOSE_gli, crcl, f_cirrhosis
 
 
 @app.cell
@@ -136,7 +160,7 @@ def display(
 def calculate_renal_function(crcl):
     """Convert CrCl to f_renal_function."""
     normal_crcl = 110.0  # mL/min (eGFR 100 + 10% overestimation)
-    # Calculate f_renal_function for model
+    # Calculate f_renal_function
     f_renal_function = min(crcl.value / normal_crcl, 1.0)
     return (f_renal_function,)
 
@@ -144,7 +168,7 @@ def calculate_renal_function(crcl):
 @app.cell
 def calculate_cyp2c9_activity(allele1_activity, allele2_activity):
     """Calculate f_cyp2c9 from the two allele activities."""
-    # Calculate mean activity using state values directly
+    # Calculate mean activity
     f_cyp2c9 = (allele1_activity() + allele2_activity()) / 2.0 / 100.0
     return (f_cyp2c9,)
 
@@ -160,8 +184,6 @@ def plots(df, labels):
     fig2 = px.line(df, x="time", y="[Cve_m1]", title="M1 Plasma", labels=labels, markers=True, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
     fig3 = px.line(df, x="time", y="[Cve_m2]", title="M2 Plasma", labels=labels, markers=True, range_y=[0, 0.1], range_x=[0, 25], height=height, width=width)
     fig4 = px.line(df, x="time", y="Aurine_m1_m2", title="M1 + M2 Urine", labels=labels, markers=True, range_y=[0, 10], height=height, width=width)
-
-    # Plots in one row with tight spacing
     mo.hstack([fig1, fig2, fig3, fig4], gap=0)
     return
 
@@ -176,7 +198,6 @@ def simulation(
     r: "roadrunner.RoadRunner",
     units_factors,
 ):
-    # simulation
     import pandas as pd
 
     r.resetAll()

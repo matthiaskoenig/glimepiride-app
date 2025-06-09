@@ -1,7 +1,7 @@
 {
   "type": "grid",
   "data": {
-    "columns": 38,
+    "columns": 35,
     "rowHeight": 20,
     "maxWidth": 2000,
     "bordered": false,
@@ -24,11 +24,17 @@
         "position": null
       },
       {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
         "position": [
           0,
           3,
           11,
-          14
+          15
         ]
       },
       {
@@ -40,9 +46,9 @@
       {
         "position": [
           0,
-          17,
+          18,
           35,
-          20
+          21
         ]
       },
       {
