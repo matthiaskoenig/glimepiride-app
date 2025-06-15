@@ -200,7 +200,7 @@ def cirrhosis_slider(cirrhosis_degree, set_cirrhosis_degree):
         stop=0.95,
         value=cirrhosis_degree(),
         step=0.01,
-        label="Cirrhosis Degree",
+        label="Cirrhosis Degree [-]",
         on_change=set_cirrhosis_degree
     )
 
@@ -234,8 +234,14 @@ def dose_slider(dose_value, set_dose_value):
 
 
 @app.cell
-def body_weight_slider(bw_value, set_bw_value):
-    BW = mo.ui.slider(start=40, stop=170.0, value=bw_value(), on_change=set_bw_value,label="Bodyweight [kg]")
+def bodyweight_slider(bw_value, set_bw_value):
+    BW = mo.ui.slider(
+        start=40,
+        stop=170.0,
+        value=bw_value(),
+        on_change=set_bw_value,
+        label="Bodyweight [kg]"
+    )
 
     return (BW,)
 
@@ -277,10 +283,7 @@ def display_save_section(patient_name_input, save_button):
     mo.md(
         f"""
     ### Save Current Configuration
-    {mo.hstack([
-        patient_name_input,
-        save_button
-    ])}
+    {mo.hstack([patient_name_input, save_button], gap=0)}
     """
     )
     return
@@ -327,26 +330,21 @@ def save_patient(
 def patients_table_display(delete_buttons, load_buttons, saved_patients):
     # List of dicts for table data
     table_data = []
-    button_index = 0
 
-    for name, config in saved_patients().items():
+    for button_index, (name, config) in enumerate(saved_patients().items()):
         row_data = {
             "Name": name,
-            "Dose (mg)": int(config["dose"]),
-            "Weight (kg)": config["weight"],
-            "CrCl (mL/min)": int(config["crcl"]),
-            "Cirrhosis": f"{config['cirrhosis']:.2f}",
-            "Allele 1 (%)": int(config["allele1"]),
-            "Allele 2 (%)": int(config["allele2"]),
+            "Dose [mg]": int(config["dose"]),
+            "Weight [kg]": config["weight"],
+            "CrCl [mL/min]": int(config["crcl"]),
+            "Cirrhosis [-]": f"{config['cirrhosis']:.2f}",
+            "Allele 1 [%]": int(config["allele1"]),
+            "Allele 2 [%]": int(config["allele2"]),
+            "Load": load_buttons[button_index],
+            "Delete": delete_buttons[button_index]
         }
 
-        # Add buttons if available
-        if button_index < len(load_buttons):
-            row_data["Load"] = load_buttons[button_index]
-            row_data["Delete"] = delete_buttons[button_index]
-
         table_data.append(row_data)
-        button_index += 1
 
     mo.md(
         f"""
@@ -374,7 +372,6 @@ def patient_actions(
     set_saved_patients,
 ):
     def load_patient(patient_name):
-        """Load a patient's configuration into the UI"""
         if patient_name in saved_patients():
             config = saved_patients()[patient_name]
 
@@ -387,7 +384,6 @@ def patient_actions(
             set_allele2_activity(config["allele2"])
 
     def delete_patient(patient_name):
-        """Delete a patient from saved patients"""
         updated_patients = saved_patients().copy()
         if patient_name in updated_patients:
             del updated_patients[patient_name]
