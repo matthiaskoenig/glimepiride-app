@@ -90,7 +90,13 @@ def body_weight_state():
     bw_value, set_bw_value = mo.state(75.0)
     BW = mo.ui.slider(start=40, stop=170.0, value=bw_value(), on_change=set_bw_value,label="Bodyweight [kg]")
 
-    return BW, bw_value
+    return BW, bw_value, set_bw_value
+
+
+@app.cell
+def dose_state():
+    dose_value, set_dose_value = mo.state(4.0)
+    return dose_value, set_dose_value
 
 
 @app.cell
@@ -216,9 +222,15 @@ def crcl_slider(crcl_value, set_crcl_value):
 
 
 @app.cell
-def dose_slider():
-    PODOSE_gli = mo.ui.slider(start=0.0, stop=8.0, value=4.0, step=1.0, label="Glimepiride Dose [mg]")
-
+def dose_slider(dose_value, set_dose_value):
+    PODOSE_gli = mo.ui.slider(
+        start=0.0,
+        stop=8.0,
+        value=dose_value(),
+        on_change=set_dose_value,
+        step=1.0,
+        label="Glimepiride Dose [mg]"
+    )
     return (PODOSE_gli,)
 
 
@@ -226,10 +238,16 @@ def dose_slider():
 def patient_storage():
     # State for storing saved patients
     saved_patients, set_saved_patients = mo.state({})
-    # State for tracking currently loaded patient name
+
+    return saved_patients, set_saved_patients
+
+
+@app.cell
+def current_patient_state():
+    # State to track which patient is currently loaded
     current_patient_name, set_current_patient_name = mo.state("")
 
-    return saved_patients, set_current_patient_name, set_saved_patients
+    return current_patient_name, set_current_patient_name
 
 
 @app.cell
@@ -243,8 +261,8 @@ def patient_save_controls(patient_name_value, set_patient_name_value):
     patient_name_input = mo.ui.text(
         placeholder="Enter patient name",
         label="Patient Name",
-        value=patient_name_value(),  # Controlled by state
-        on_change=set_patient_name_value  # Update state when typing
+        value=patient_name_value(),
+        on_change=set_patient_name_value
     )
 
     # Save button with callback
@@ -311,31 +329,110 @@ def save_patient(
 
 
 @app.cell
-def patients_table_display(saved_patients):
-    patient_data = []
-    for name, config in saved_patients().items():
-        patient_data.append({
-            "Name": name,
-            "Dose (mg)": config["dose"],
-            "Weight (kg)": config["weight"],
-            "CrCl (mL/min)": config["crcl"],
-            "Cirrhosis": f"{config['cirrhosis']:.2f}",
-            "Allele1 (%)": config["allele1"],
-            "Allele2 (%)": config["allele2"],
-        })
+def patients_table_display(delete_buttons, load_buttons, saved_patients):
+    # List of dicts for table data
+    table_data = []
+    button_index = 0
 
-    patients_df = pd.DataFrame(patient_data, columns=[
-        "Name", "Dose (mg)", "Weight (kg)", "CrCl (mL/min)",
-        "Cirrhosis", "Allele1 (%)", "Allele2 (%)", "Current"
-    ])
+    for name, config in saved_patients().items():
+        row_data = {
+            "Name": name,
+            "Dose (mg)": int(config["dose"]),
+            "Weight (kg)": int(config["weight"]),
+            "CrCl (mL/min)": int(config["crcl"]),
+            "Cirrhosis": f"{config['cirrhosis']:.2f}",
+            "Allele 1 (%)": int(config["allele1"]),
+            "Allele 2 (%)": int(config["allele2"]),
+        }
+
+        # Add buttons if available
+        if button_index < len(load_buttons):
+            row_data["Load"] = load_buttons[button_index]
+            row_data["Delete"] = delete_buttons[button_index]
+
+        table_data.append(row_data)
+        button_index += 1
 
     mo.md(
         f"""
         ### Saved Patients
-        {mo.ui.table(patients_df)}
+        {mo.ui.table(
+            table_data,
+            show_column_summaries=False,
+            pagination=True,
+            page_size=5
+        )}
         """
     )
     return
+
+
+@app.cell
+def patient_actions(
+    current_patient_name,
+    saved_patients,
+    set_allele1_activity,
+    set_allele2_activity,
+    set_bw_value,
+    set_cirrhosis_degree,
+    set_crcl_value,
+    set_current_patient_name,
+    set_dose_value,
+    set_saved_patients,
+):
+    def load_patient(patient_name):
+        """Load a patient's configuration into the UI"""
+        if patient_name in saved_patients():
+            config = saved_patients()[patient_name]
+
+            # Update all UI elements with loaded values
+            set_dose_value(config["dose"])
+            set_bw_value(config["weight"])
+            set_crcl_value(config["crcl"])
+            set_cirrhosis_degree(config["cirrhosis"])
+            set_allele1_activity(config["allele1"])
+            set_allele2_activity(config["allele2"])
+
+            # Mark this patient as current
+            set_current_patient_name(patient_name)
+
+    def delete_patient(patient_name):
+        """Delete a patient from saved patients"""
+        updated_patients = saved_patients().copy()
+        if patient_name in updated_patients:
+            del updated_patients[patient_name]
+            set_saved_patients(updated_patients)
+
+            # Clear current patient if it was the deleted one
+            if current_patient_name() == patient_name:
+                set_current_patient_name("")
+
+    return delete_patient, load_patient
+
+
+@app.cell
+def patient_action_buttons(delete_patient, load_patient, saved_patients):
+    # Create load buttons for each saved patient
+    load_buttons = mo.ui.array([
+        mo.ui.button(
+            label="Load",
+            kind="neutral",
+            on_change=lambda v, name=name: load_patient(name)
+        )
+        for name in saved_patients().keys()
+    ])
+
+    # Create delete buttons for each saved patient
+    delete_buttons = mo.ui.array([
+        mo.ui.button(
+            label="Delete",
+            kind="danger",
+            on_change=lambda v, name=name: delete_patient(name)
+        )
+        for name in saved_patients().keys()
+    ])
+
+    return delete_buttons, load_buttons
 
 
 @app.cell
@@ -357,8 +454,8 @@ def display(
     {mo.vstack([
         PODOSE_gli,
         BW,
-        mo.hstack([f_cirrhosis, cirrhosis_dropdown], gap=0),
         mo.hstack([crcl, renal_impairment_dropdown], gap=0),
+        mo.hstack([f_cirrhosis, cirrhosis_dropdown], gap=0),
         mo.hstack([cyp2c9_allele1_slider, cyp2c9_allele1_dropdown], gap=0),
         mo.hstack([cyp2c9_allele2_slider, cyp2c9_allele2_dropdown], gap=0)
     ])}
