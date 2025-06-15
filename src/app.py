@@ -7,6 +7,7 @@ app = marimo.App(layout_file="layouts/app.grid.json")
 
 with app.setup:
     import marimo as mo
+    import pandas as pd
     mo.md("# Welcome to Glimepiride Webapp!")
 
 
@@ -21,7 +22,7 @@ def load_model():
     units = {
         "time": "hr", 
         "[Cve_gli]": "µM", 
-        "[Cve_m1]": "µM", 
+        "[Cve_m1]": "µM",
         "[Cve_m2]": "µM", 
         "Aurine_m1_m2": "µmole"
     }
@@ -82,6 +83,14 @@ def renal_impairment_state():
     crcl_value, set_crcl_value = mo.state(110)  # Default normal
 
     return crcl_map, crcl_value, normal_crcl, set_crcl_value
+
+
+@app.cell
+def body_weight_state():
+    bw_value, set_bw_value = mo.state(75.0)
+    BW = mo.ui.slider(start=40, stop=170.0, value=bw_value(), on_change=set_bw_value,label="Bodyweight [kg]")
+
+    return BW, bw_value
 
 
 @app.cell
@@ -207,11 +216,126 @@ def crcl_slider(crcl_value, set_crcl_value):
 
 
 @app.cell
-def settings_other():
+def dose_slider():
     PODOSE_gli = mo.ui.slider(start=0.0, stop=8.0, value=4.0, step=1.0, label="Glimepiride Dose [mg]")
-    BW = mo.ui.slider(start=40, stop=170.0, value=75.0, label="Bodyweight [kg]")
 
-    return BW, PODOSE_gli
+    return (PODOSE_gli,)
+
+
+@app.cell
+def patient_storage():
+    # State for storing saved patients
+    saved_patients, set_saved_patients = mo.state({})
+    # State for tracking currently loaded patient name
+    current_patient_name, set_current_patient_name = mo.state("")
+
+    return saved_patients, set_current_patient_name, set_saved_patients
+
+
+@app.cell
+def patient_name_input_state():
+    patient_name_value, set_patient_name_value = mo.state("")
+    return patient_name_value, set_patient_name_value
+
+
+@app.cell
+def patient_save_controls(patient_name_value, set_patient_name_value):
+    patient_name_input = mo.ui.text(
+        placeholder="Enter patient name",
+        label="Patient Name",
+        value=patient_name_value(),  # Controlled by state
+        on_change=set_patient_name_value  # Update state when typing
+    )
+
+    # Save button with callback
+    save_button = mo.ui.button(
+        label="Save Patient",
+        on_click=lambda value: value + 1 if value else 1
+    )
+
+    return patient_name_input, save_button
+
+
+@app.cell
+def display_save_section(patient_name_input, save_button):
+    mo.md(
+        f"""
+    ### Save Current Configuration
+    {mo.hstack([
+        patient_name_input,
+        save_button
+    ])}
+    """
+    )
+    return
+
+
+@app.cell
+def save_patient(
+    PODOSE_gli,
+    allele1_activity,
+    allele2_activity,
+    bw_value,
+    cirrhosis_degree,
+    crcl_value,
+    patient_name_input,
+    save_button,
+    saved_patients,
+    set_current_patient_name,
+    set_patient_name_value,
+    set_saved_patients,
+):
+    if save_button.value and patient_name_input.value:
+        patient_name = patient_name_input.value.strip()
+
+        if patient_name:
+            patient_config = {
+                "dose": PODOSE_gli.value,
+                "weight": bw_value(),
+                "crcl": crcl_value(),
+                "cirrhosis": cirrhosis_degree(),
+                "allele1": allele1_activity(),
+                "allele2": allele2_activity(),
+            }
+
+            updated_patients = saved_patients().copy()
+            updated_patients[patient_name] = patient_config
+            set_saved_patients(updated_patients)
+
+            set_current_patient_name(patient_name)
+
+            # Clear input field
+            set_patient_name_value("")
+
+    return
+
+
+@app.cell
+def patients_table_display(saved_patients):
+    patient_data = []
+    for name, config in saved_patients().items():
+        patient_data.append({
+            "Name": name,
+            "Dose (mg)": config["dose"],
+            "Weight (kg)": config["weight"],
+            "CrCl (mL/min)": config["crcl"],
+            "Cirrhosis": f"{config['cirrhosis']:.2f}",
+            "Allele1 (%)": config["allele1"],
+            "Allele2 (%)": config["allele2"],
+        })
+
+    patients_df = pd.DataFrame(patient_data, columns=[
+        "Name", "Dose (mg)", "Weight (kg)", "CrCl (mL/min)",
+        "Cirrhosis", "Allele1 (%)", "Allele2 (%)", "Current"
+    ])
+
+    mo.md(
+        f"""
+        ### Saved Patients
+        {mo.ui.table(patients_df)}
+        """
+    )
+    return
 
 
 @app.cell
@@ -287,19 +411,18 @@ def plots(df, labels):
 
 @app.cell
 def simulation(
-    BW,
     PODOSE_gli,
+    bw_value,
     f_cirrhosis,
     f_cyp2c9,
     f_renal_function,
     r: "roadrunner.RoadRunner",
     units_factors,
 ):
-    import pandas as pd
 
     r.resetAll()
     r.setValue("PODOSE_gli", PODOSE_gli.value)  # [mg]
-    r.setValue("BW", BW.value)  # [kg]
+    r.setValue("BW", bw_value())  # [kg]
     r.setValue("f_cirrhosis", f_cirrhosis.value)
     r.setValue("KI__f_renal_function", f_renal_function)
     r.setValue("LI__f_cyp2c9", f_cyp2c9)
@@ -308,7 +431,6 @@ def simulation(
     # unit conversions
     for col in df.columns:
         df[col] = df[col] * units_factors[col]  # [hr]
-    df
     return (df,)
 
 
