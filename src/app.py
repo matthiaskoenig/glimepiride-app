@@ -88,9 +88,8 @@ def renal_impairment_state():
 @app.cell
 def body_weight_state():
     bw_value, set_bw_value = mo.state(75.0)
-    BW = mo.ui.slider(start=40, stop=170.0, value=bw_value(), on_change=set_bw_value,label="Bodyweight [kg]")
 
-    return BW, bw_value, set_bw_value
+    return bw_value, set_bw_value
 
 
 @app.cell
@@ -235,19 +234,18 @@ def dose_slider(dose_value, set_dose_value):
 
 
 @app.cell
+def body_weight_slider(bw_value, set_bw_value):
+    BW = mo.ui.slider(start=40, stop=170.0, value=bw_value(), on_change=set_bw_value,label="Bodyweight [kg]")
+
+    return (BW,)
+
+
+@app.cell
 def patient_storage():
     # State for storing saved patients
     saved_patients, set_saved_patients = mo.state({})
 
     return saved_patients, set_saved_patients
-
-
-@app.cell
-def current_patient_state():
-    # State to track which patient is currently loaded
-    current_patient_name, set_current_patient_name = mo.state("")
-
-    return current_patient_name, set_current_patient_name
 
 
 @app.cell
@@ -299,7 +297,6 @@ def save_patient(
     patient_name_input,
     save_button,
     saved_patients,
-    set_current_patient_name,
     set_patient_name_value,
     set_saved_patients,
 ):
@@ -320,8 +317,6 @@ def save_patient(
             updated_patients[patient_name] = patient_config
             set_saved_patients(updated_patients)
 
-            set_current_patient_name(patient_name)
-
             # Clear input field
             set_patient_name_value("")
 
@@ -338,7 +333,7 @@ def patients_table_display(delete_buttons, load_buttons, saved_patients):
         row_data = {
             "Name": name,
             "Dose (mg)": int(config["dose"]),
-            "Weight (kg)": int(config["weight"]),
+            "Weight (kg)": config["weight"],
             "CrCl (mL/min)": int(config["crcl"]),
             "Cirrhosis": f"{config['cirrhosis']:.2f}",
             "Allele 1 (%)": int(config["allele1"]),
@@ -369,14 +364,12 @@ def patients_table_display(delete_buttons, load_buttons, saved_patients):
 
 @app.cell
 def patient_actions(
-    current_patient_name,
     saved_patients,
     set_allele1_activity,
     set_allele2_activity,
     set_bw_value,
     set_cirrhosis_degree,
     set_crcl_value,
-    set_current_patient_name,
     set_dose_value,
     set_saved_patients,
 ):
@@ -393,19 +386,12 @@ def patient_actions(
             set_allele1_activity(config["allele1"])
             set_allele2_activity(config["allele2"])
 
-            # Mark this patient as current
-            set_current_patient_name(patient_name)
-
     def delete_patient(patient_name):
         """Delete a patient from saved patients"""
         updated_patients = saved_patients().copy()
         if patient_name in updated_patients:
             del updated_patients[patient_name]
             set_saved_patients(updated_patients)
-
-            # Clear current patient if it was the deleted one
-            if current_patient_name() == patient_name:
-                set_current_patient_name("")
 
     return delete_patient, load_patient
 
