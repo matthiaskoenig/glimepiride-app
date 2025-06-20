@@ -40,7 +40,7 @@ def load_model():
         "[Cve_m2]": "<b>M2 Plasma [µM]</b>",
         "Aurine_m1_m2": "<b>M1 + M2 Urine [µmole]</b>"
     }
-    return labels, r, units_factors
+    return Path, labels, r, units_factors
 
 
 @app.cell
@@ -507,6 +507,27 @@ def plots(df, labels):
         fig.update_traces(line_width=3)
 
     mo.hstack([fig1, fig2, fig3, fig4], gap=0)
+    return
+
+
+@app.cell
+def model_image(Path):
+    image_path = Path(__file__).parent.parent / "model" / "glimepiride_model.png"
+    mo.image(src=str(image_path))
+    return
+
+
+@app.cell
+def model_description():
+    mo.md(
+        """
+    **Whole-body PBPK model of glimepiride.**
+    **A)** Whole-body model illustrating glimepiride (GLI) administration (oral and intravenous), its systemic circulation via venous and arterial blood, and the key organs (liver, kidney, GI tract) involved in GLI metabolism, distribution, and excretion.
+    **B)** Intestinal model showing dissolution and absorption of GLI by enterocytes. No enterohepatic circulation of M1 and M2 is assumed, but reverse transport via enterocytes is included.
+    **C)** Hepatic model depicting CYP2C9-mediated metabolism of GLI to M1 and M2.
+    **D)** Renal model highlighting the elimination of M1 and M2 via urine; unchanged GLI is not excreted renally.
+    """
+    )
     return
 
 
