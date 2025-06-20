@@ -483,17 +483,28 @@ def plots(df, labels):
         "tickfont": {"size": 15}
     }
 
-    fig1 = px.line(df, x="time", y="[Cve_gli]", title=None, labels=labels, markers=True, range_y=[0, 1], range_x=[0, 25], height=height, width=width)
-    fig1.update_layout(xaxis=axis_style, yaxis=axis_style)
+    fig1 = px.line(df, x="time", y="[Cve_gli]", title=None, labels=labels, markers=False, range_y=[0, 1], range_x=[0, 25], height=height, width=width)
+    fig2 = px.line(df, x="time", y="[Cve_m1]", title=None, labels=labels, markers=False, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
+    fig3 = px.line(df, x="time", y="[Cve_m2]", title=None, labels=labels, markers=False, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
+    fig4 = px.line(df, x="time", y="Aurine_m1_m2", title=None, labels=labels, markers=False, range_y=[0, 10], height=height, width=width)
 
-    fig2 = px.line(df, x="time", y="[Cve_m1]", title=None, labels=labels, markers=True, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
-    fig2.update_layout(xaxis=axis_style, yaxis=axis_style)
-
-    fig3 = px.line(df, x="time", y="[Cve_m2]", title=None, labels=labels, markers=True, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
-    fig3.update_layout(xaxis=axis_style, yaxis=axis_style)
-
-    fig4 = px.line(df, x="time", y="Aurine_m1_m2", title=None, labels=labels, markers=True, range_y=[0, 10], height=height, width=width)
-    fig4.update_layout(xaxis=axis_style, yaxis=axis_style)
+    for fig in [fig1, fig2, fig3, fig4]:
+        fig.update_layout(
+            xaxis=axis_style,
+            yaxis=axis_style,
+            plot_bgcolor='white',
+            xaxis_gridcolor='lightgray',
+            yaxis_gridcolor='lightgray',
+            xaxis_showline=True,
+            xaxis_linewidth=1,
+            xaxis_linecolor='black',
+            xaxis_mirror=True,
+            yaxis_showline=True,
+            yaxis_linewidth=1,
+            yaxis_linecolor='black',
+            yaxis_mirror=True
+        )
+        fig.update_traces(line_width=3)
 
     mo.hstack([fig1, fig2, fig3, fig4], gap=0)
     return
