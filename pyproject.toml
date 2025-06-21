@@ -10,4 +10,5 @@ dependencies = [
     "pandas>=2.2.3",
     "matplotlib",
     "plotly",
+    "pkdb-analysis",
 ]

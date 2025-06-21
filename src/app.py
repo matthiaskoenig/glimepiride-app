@@ -8,6 +8,7 @@ app = marimo.App(layout_file="layouts/app.grid.json")
 with app.setup:
     import marimo as mo
     import pandas as pd
+    import numpy as np
     mo.md("# Welcome to Glimepiride Webapp!")
 
 
@@ -476,19 +477,22 @@ def calculate_cyp2c9_activity(allele1_activity, allele2_activity):
 @app.cell
 def plots(df, labels):
     import plotly.express as px
+    import plotly.io as pio
+
+    pio.renderers.default = None # Fix renderer issue
 
     height = 400
     width = 450
-
-    axis_style = {
-        "title_font": {"size": 17},
-        "tickfont": {"size": 15}
-    }
 
     fig1 = px.line(df, x="time", y="[Cve_gli]", title=None, labels=labels, markers=False, range_y=[0, 1], range_x=[0, 25], height=height, width=width)
     fig2 = px.line(df, x="time", y="[Cve_m1]", title=None, labels=labels, markers=False, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
     fig3 = px.line(df, x="time", y="[Cve_m2]", title=None, labels=labels, markers=False, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
     fig4 = px.line(df, x="time", y="Aurine_m1_m2", title=None, labels=labels, markers=False, range_y=[0, 10], height=height, width=width)
+
+    axis_style = {
+        "title_font": {"size": 17},
+        "tickfont": {"size": 15}
+    }
 
     for fig in [fig1, fig2, fig3, fig4]:
         fig.update_layout(
@@ -538,6 +542,7 @@ def model_description():
 def disclaimer():
     mo.md(
         """
+    ---
     ## Disclaimer
     The software is provided **AS IS**, without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.<br>
     This software is a research proof-of-principle and not fit for any clinical application. It is not intended to diagnose, treat, or inform medication dosing decisions. Always consult with qualified healthcare professionals for medical advice and treatment planning.
@@ -550,7 +555,6 @@ def disclaimer():
 def reference():
     mo.md(
         """
-    ---
     ## Reference
     **A Digital Twin of Glimepiride for Personalized and Stratified Diabetes Treatment.**<br>
     _Michelle Elias, Matthias König (2025)_<br>
@@ -583,6 +587,108 @@ def simulation(
     for col in df.columns:
         df[col] = df[col] * units_factors[col]  # [hr]
     return (df,)
+
+
+@app.cell
+def import_pk():
+    from pkdb_analysis.pk.pharmacokinetics import TimecoursePK
+    from pint import UnitRegistry
+    ureg = UnitRegistry()
+    Q_ = ureg.Quantity
+    return Q_, TimecoursePK, ureg
+
+
+@app.cell
+def pk_parameters(PODOSE_gli, Q_, TimecoursePK, df, ureg):
+    pk_results = {}
+
+    # Time vector with units
+    t_vec = Q_(df["time"].values, "hour")
+
+    # Get dose value from slider
+    dose_mg = PODOSE_gli.value
+
+    # Calculate for glimepiride
+    tcpk_gli = TimecoursePK(
+        time=t_vec,
+        concentration=Q_(df["[Cve_gli]"].values, "micromolar"),
+        dose=Q_(dose_mg, "milligram"),
+        ureg=ureg,
+        substance="glimepiride",
+        min_treshold=100
+    )
+
+    # Calculate for M
+    tcpk_m1 = TimecoursePK(
+        time=t_vec,
+        concentration=Q_(df["[Cve_m1]"].values, "micromolar"),
+        dose=None,
+        ureg=ureg,
+        substance="M1"
+    )
+
+    # Calculate for M2
+    tcpk_m2 = TimecoursePK(
+        time=t_vec,
+        concentration=Q_(df["[Cve_m2]"].values, "micromolar"),
+        dose=None,
+        ureg=ureg,
+        substance="M2"
+    )
+
+    # Extract results
+    for substance_name, tcpk in [("Glimepiride", tcpk_gli), ("M1", tcpk_m1), ("M2", tcpk_m2)]:
+        pk = tcpk.pk
+        pk_results[substance_name] = {
+            "Cmax [µM]": f"{pk.cmax.magnitude:.3f}",
+            "Tmax [hr]": f"{pk.tmax.magnitude:.1f}",
+            "AUC [µM*hr]": f"{pk.auc.magnitude:.1f}",
+            "Half-life [hr]": f"{pk.thalf.magnitude:.1f}"
+        }
+
+    return (pk_results,)
+
+
+@app.cell
+def pk_table_display(PODOSE_gli, pk_results):
+    # Molecular weights for conversion
+    MW = {
+        "Glimepiride": 490.62,  # g/mol
+        "M1": 506.62,  # g/mol
+        "M2": 520.6  # g/mol
+    }
+
+    # Create display data with unit conversion
+    display_data = []
+    for substance, params in pk_results.items():
+        row = {"Substance": substance}
+        for key, value in params.items():
+            if "AUC" in key and substance in MW:
+                # Extract numeric value from string
+                auc_um_hr = float(value.split()[0])
+                # Convert µM*hr to ng/mL*hr
+                auc_ng_ml_hr = auc_um_hr * MW[substance]
+                row[key.replace("µM*hr", "ng/mL*hr")] = f"{auc_ng_ml_hr:.1f}"
+            else:
+                row[key] = value
+        display_data.append(row)
+
+    mo.md(
+        f"""
+        ## Pharmacokinetic Parameters
+        **Dose: {PODOSE_gli.value} mg**
+
+        {mo.ui.table(
+            display_data,
+            show_column_summaries=False,
+            show_download=False,
+            label=None,
+            selection=None,
+
+        )}
+        """
+    )
+    return
 
 
 if __name__ == "__main__":
