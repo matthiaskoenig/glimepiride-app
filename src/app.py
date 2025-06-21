@@ -381,7 +381,9 @@ def patients_table_display(load_buttons, saved_patients):
             table_data,
             show_column_summaries=False,
             pagination=True,
-            page_size=5
+            page_size=5,
+            selection=None,
+            show_download=False
         )}
         """
     )
@@ -512,8 +514,8 @@ def plots(df, labels):
 
 @app.cell
 def model_image(Path):
-    image_path = Path(__file__).parent.parent / "model" / "glimepiride_model.png"
-    mo.image(src=str(image_path))
+    model_img_path = Path(__file__).parent.parent / "model" / "glimepiride_model.png"
+    mo.image(src=str(model_img_path))
     return
 
 
@@ -521,11 +523,38 @@ def model_image(Path):
 def model_description():
     mo.md(
         """
-    **Whole-body PBPK model of glimepiride.**
+    **Whole-body PBPK model of glimepiride.** </br>
     **A)** Whole-body model illustrating glimepiride (GLI) administration (oral and intravenous), its systemic circulation via venous and arterial blood, and the key organs (liver, kidney, GI tract) involved in GLI metabolism, distribution, and excretion.
     **B)** Intestinal model showing dissolution and absorption of GLI by enterocytes. No enterohepatic circulation of M1 and M2 is assumed, but reverse transport via enterocytes is included.
     **C)** Hepatic model depicting CYP2C9-mediated metabolism of GLI to M1 and M2.
     **D)** Renal model highlighting the elimination of M1 and M2 via urine; unchanged GLI is not excreted renally.
+    **E)** Key factors influencing glimepiride disposition accounted for by the model: liver function (cirrhosis), renal impairment, CYP2C9 genotypes, bodyweight, and administered dose.
+    """
+    )
+    return
+
+
+@app.cell
+def disclaimer():
+    mo.md(
+        """
+    ## Disclaimer
+    The software is provided **AS IS**, without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.<br>
+    This software is a research proof-of-principle and not fit for any clinical application. It is not intended to diagnose, treat, or inform medication dosing decisions. Always consult with qualified healthcare professionals for medical advice and treatment planning.
+    """
+    )
+    return
+
+
+@app.cell
+def reference():
+    mo.md(
+        """
+    ---
+    ## Reference
+    **A Digital Twin of Glimepiride for Personalized and Stratified Diabetes Treatment.**<br>
+    _Michelle Elias, Matthias König (2025)_<br>
+    Preprints 2025, 2025061264. (preprint). doi:10.20944/preprints202506.1264.v1
     """
     )
     return
