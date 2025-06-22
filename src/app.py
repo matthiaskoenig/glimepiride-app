@@ -363,8 +363,8 @@ def patients_table_display(load_buttons, saved_patients):
 
     for button_index, (name, config) in enumerate(saved_patients().items()):
         row_data = {
-            "Load": load_buttons[button_index],
-            "Name": name,
+            " ": load_buttons[button_index],
+            "Patient": name,
             "Dose [mg]": int(config["dose"]),
             "Weight [kg]": config["weight"],
             "CrCl [mL/min]": int(config["crcl"]),
@@ -377,7 +377,7 @@ def patients_table_display(load_buttons, saved_patients):
 
     mo.md(
         f"""
-        ### Load Example Patients
+        ## **Load Example Patients**
         {mo.ui.table(
             table_data,
             show_column_summaries=False,
@@ -446,12 +446,17 @@ def display(
 ):
     mo.md(
         f"""
-    ## Input Patient Data
+    ## **Input Patient Data**
     {mo.vstack([
+        mo.md("###**Patient Parameters**"),
         PODOSE_gli,
         BW,
+
+        mo.md("###**Organ Function**"),
         mo.hstack([crcl, renal_impairment_dropdown], gap=0),
         mo.hstack([f_cirrhosis, cirrhosis_dropdown], gap=0),
+
+        mo.md("###**CYP2C9 Genotype**"),
         mo.hstack([cyp2c9_allele1_slider, cyp2c9_allele1_dropdown], gap=0),
         mo.hstack([cyp2c9_allele2_slider, cyp2c9_allele2_dropdown], gap=0)
     ])}
@@ -481,8 +486,8 @@ def plots(df, labels):
 
     pio.renderers.default = None # Fix renderer issue
 
-    height = 400
-    width = 450
+    height = 350
+    width = 420
 
     fig1 = px.line(df, x="time", y="[Cve_gli]", title=None, labels=labels, markers=False, range_y=[0, 1], range_x=[0, 25], height=height, width=width)
     fig2 = px.line(df, x="time", y="[Cve_m1]", title=None, labels=labels, markers=False, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
@@ -512,7 +517,10 @@ def plots(df, labels):
         )
         fig.update_traces(line_width=3)
 
-    mo.hstack([fig1, fig2, fig3, fig4], gap=0)
+    mo.vstack([
+        mo.md("## **Pharmacokinetic Profiles**"),
+        mo.hstack([fig1, fig2, fig3, fig4], gap=0)
+    ])
     return
 
 
@@ -527,8 +535,8 @@ def model_image(Path):
 def model_description():
     mo.md(
         """
-    **Whole-body PBPK model of glimepiride.** </br>
-    **A)** Whole-body model illustrating glimepiride (GLI) administration (oral and intravenous), its systemic circulation via venous and arterial blood, and the key organs (liver, kidney, GI tract) involved in GLI metabolism, distribution, and excretion.
+    ###**Whole-body PBPK model of glimepiride.** </br>
+    **A)** Whole-body model illustrating glimepiride (GLI) administration, its systemic circulation via venous and arterial blood, and the key organs (liver, kidney, GI tract) involved in GLI metabolism, distribution, and excretion.
     **B)** Intestinal model showing dissolution and absorption of GLI by enterocytes. No enterohepatic circulation of M1 and M2 is assumed, but reverse transport via enterocytes is included.
     **C)** Hepatic model depicting CYP2C9-mediated metabolism of GLI to M1 and M2.
     **D)** Renal model highlighting the elimination of M1 and M2 via urine; unchanged GLI is not excreted renally.
@@ -543,9 +551,9 @@ def disclaimer():
     mo.md(
         """
     ---
-    ## Disclaimer
+    ## **Disclaimer**
     The software is provided **AS IS**, without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.<br>
-    This software is a research proof-of-principle and not fit for any clinical application. It is not intended to diagnose, treat, or inform medication dosing decisions. Always consult with qualified healthcare professionals for medical advice and treatment planning.
+    This software is a **research proof-of-principle** and not fit for any clinical application. It is not intended to diagnose, treat, or inform medication dosing decisions. Always consult with qualified healthcare professionals for medical advice and treatment planning.
     """
     )
     return
@@ -555,7 +563,7 @@ def disclaimer():
 def reference():
     mo.md(
         """
-    ## Reference
+    ## **Reference**
     **A Digital Twin of Glimepiride for Personalized and Stratified Diabetes Treatment.**<br>
     _Michelle Elias, Matthias König (2025)_<br>
     Preprints 2025, 2025061264. (preprint). doi:10.20944/preprints202506.1264.v1
@@ -618,7 +626,7 @@ def pk_parameters(PODOSE_gli, Q_, TimecoursePK, df, ureg):
         min_treshold=100
     )
 
-    # Calculate for M
+    # Calculate for M1
     tcpk_m1 = TimecoursePK(
         time=t_vec,
         concentration=Q_(df["[Cve_m1]"].values, "micromolar"),
@@ -640,7 +648,7 @@ def pk_parameters(PODOSE_gli, Q_, TimecoursePK, df, ureg):
     for substance_name, tcpk in [("Glimepiride", tcpk_gli), ("M1", tcpk_m1), ("M2", tcpk_m2)]:
         pk = tcpk.pk
         pk_results[substance_name] = {
-            "Cmax [µM]": f"{pk.cmax.magnitude:.3f}",
+            "Cmax [µM]": f"{pk.cmax.magnitude:.2f}",
             "Tmax [hr]": f"{pk.tmax.magnitude:.1f}",
             "AUC [µM*hr]": f"{pk.auc.magnitude:.1f}",
             "Half-life [hr]": f"{pk.thalf.magnitude:.1f}"
@@ -675,8 +683,8 @@ def pk_table_display(PODOSE_gli, pk_results):
 
     mo.md(
         f"""
-        ## Pharmacokinetic Parameters
-        **Dose: {PODOSE_gli.value} mg**
+        ## **Pharmacokinetic Parameters**
+        Dose: {PODOSE_gli.value} mg
 
         {mo.ui.table(
             display_data,

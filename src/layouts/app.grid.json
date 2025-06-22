@@ -1,7 +1,7 @@
 {
   "type": "grid",
   "data": {
-    "columns": 35,
+    "columns": 30,
     "rowHeight": 20,
     "maxWidth": 2000,
     "bordered": false,
@@ -10,7 +10,27 @@
         "position": [
           0,
           0,
-          17,
+          16,
+          4
+        ]
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": [
+          20,
+          186,
+          7.5,
           3
         ]
       },
@@ -45,26 +65,11 @@
         "position": null
       },
       {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
         "position": [
           0,
-          66,
-          35,
-          17
+          77,
+          22,
+          21
         ]
       },
       {
@@ -75,62 +80,13 @@
       },
       {
         "position": [
-          0,
-          28,
+          15,
+          9,
           14,
-          15
-        ]
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": [
-          0,
-          43,
-          35,
           20
         ]
       },
       {
-        "position": [
-          0,
-          3,
-          10,
-          25
-        ]
-      },
-      {
-        "position": [
-          10,
-          3,
-          9,
-          25
-        ]
-      },
-      {
-        "position": [
-          0,
-          93,
-          35,
-          9
-        ]
-      },
-      {
-        "position": [
-          0,
-          83,
-          15,
-          9
-        ]
-      },
-      {
-        "position": null
-      },
-      {
         "position": null
       },
       {
@@ -138,9 +94,58 @@
       },
       {
         "position": [
-          16,
+          0,
+          42,
           28,
-          16,
+          19
+        ]
+      },
+      {
+        "position": [
+          0,
+          4,
+          8,
+          26
+        ]
+      },
+      {
+        "position": [
+          8,
+          4,
+          7,
+          29
+        ]
+      },
+      {
+        "position": [
+          0,
+          114,
+          30,
+          25
+        ]
+      },
+      {
+        "position": [
+          0,
+          102,
+          29,
+          11
+        ]
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": [
+          0,
+          62,
+          12,
           15
         ]
       }
