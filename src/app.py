@@ -9,7 +9,11 @@ with app.setup:
     import marimo as mo
     import pandas as pd
     import numpy as np
-    mo.md("# Welcome to Glimepiride Webapp!")
+    mo.md("""
+          # **Welcome to Glimepiride Webapp!**
+          ### A simulation tool for exploring patient-specific pharmacokinetics.
+          """
+          )
 
 
 @app.cell
@@ -378,6 +382,7 @@ def patients_table_display(load_buttons, saved_patients):
     mo.md(
         f"""
         ## **Load Example Patients**
+        #### Choose from example patients.
         {mo.ui.table(
             table_data,
             show_column_summaries=False,
@@ -519,8 +524,12 @@ def plots(df, labels):
 
     mo.vstack([
         mo.md("## **Pharmacokinetic Profiles**"),
-        mo.hstack([fig1, fig2, fig3, fig4], gap=0)
+        mo.vstack([
+            mo.hstack([fig1, fig2], gap=0),
+            mo.hstack([fig3, fig4], gap=0)
+        ])
     ])
+
     return
 
 
@@ -535,12 +544,11 @@ def model_image(Path):
 def model_description():
     mo.md(
         """
-    ###**Whole-body PBPK model of glimepiride.** </br>
+    ####**Whole-body PBPK model of glimepiride.** </br>
     **A)** Whole-body model illustrating glimepiride (GLI) administration, its systemic circulation via venous and arterial blood, and the key organs (liver, kidney, GI tract) involved in GLI metabolism, distribution, and excretion.
     **B)** Intestinal model showing dissolution and absorption of GLI by enterocytes. No enterohepatic circulation of M1 and M2 is assumed, but reverse transport via enterocytes is included.
     **C)** Hepatic model depicting CYP2C9-mediated metabolism of GLI to M1 and M2.
     **D)** Renal model highlighting the elimination of M1 and M2 via urine; unchanged GLI is not excreted renally.
-    **E)** Key factors influencing glimepiride disposition accounted for by the model: liver function (cirrhosis), renal impairment, CYP2C9 genotypes, bodyweight, and administered dose.
     """
     )
     return
@@ -550,7 +558,6 @@ def model_description():
 def disclaimer():
     mo.md(
         """
-    ---
     ## **Disclaimer**
     The software is provided **AS IS**, without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.<br>
     This software is a **research proof-of-principle** and not fit for any clinical application. It is not intended to diagnose, treat, or inform medication dosing decisions. Always consult with qualified healthcare professionals for medical advice and treatment planning.
@@ -563,10 +570,11 @@ def disclaimer():
 def reference():
     mo.md(
         """
+    ---
     ## **Reference**
     **A Digital Twin of Glimepiride for Personalized and Stratified Diabetes Treatment.**<br>
     _Michelle Elias, Matthias König (2025)_<br>
-    Preprints 2025, 2025061264. (preprint). doi:10.20944/preprints202506.1264.v1
+    Preprints 2025, 2025061264. (preprint). [doi:10.20944/preprints202506.1264.v1](https://doi.org/10.20944/preprints202506.1264.v1)
     """
     )
     return
@@ -658,7 +666,7 @@ def pk_parameters(PODOSE_gli, Q_, TimecoursePK, df, ureg):
 
 
 @app.cell
-def pk_table_display(PODOSE_gli, pk_results):
+def pk_table_display(pk_results):
     # Molecular weights for conversion
     MW = {
         "Glimepiride": 490.62,  # g/mol
@@ -684,7 +692,6 @@ def pk_table_display(PODOSE_gli, pk_results):
     mo.md(
         f"""
         ## **Pharmacokinetic Parameters**
-        Dose: {PODOSE_gli.value} mg
 
         {mo.ui.table(
             display_data,

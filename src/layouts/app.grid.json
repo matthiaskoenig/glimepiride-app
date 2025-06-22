@@ -2,88 +2,78 @@
   "type": "grid",
   "data": {
     "columns": 30,
-    "rowHeight": 20,
-    "maxWidth": 2000,
-    "bordered": false,
+    "rowHeight": 12,
+    "maxWidth": 1900,
+    "bordered": true,
     "cells": [
       {
         "position": [
+          8,
           0,
-          0,
-          16,
-          4
-        ]
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": [
-          20,
-          186,
-          7.5,
-          3
-        ]
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": [
-          0,
-          77,
-          22,
-          21
-        ]
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": [
-          15,
-          9,
           14,
-          20
+          12
+        ]
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": [
+          8,
+          56,
+          9,
+          39
         ]
       },
       {
@@ -94,59 +84,61 @@
       },
       {
         "position": [
-          0,
-          42,
-          28,
+          8,
+          96,
+          15,
+          64
+        ]
+      },
+      {
+        "position": [
+          8,
+          13,
+          8,
+          42
+        ]
+      },
+      {
+        "position": [
+          16,
+          13,
+          6,
+          42
+        ],
+        "scrollable": true,
+        "side": "right"
+      },
+      {
+        "position": [
+          8,
+          203,
+          14,
+          33
+        ]
+      },
+      {
+        "position": [
+          8,
+          184,
+          14,
           19
         ]
       },
       {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
         "position": [
-          0,
-          4,
           8,
-          26
-        ]
-      },
-      {
-        "position": [
-          8,
-          4,
-          7,
-          29
-        ]
-      },
-      {
-        "position": [
-          0,
-          114,
-          30,
-          25
-        ]
-      },
-      {
-        "position": [
-          0,
-          102,
-          29,
-          11
-        ]
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": [
-          0,
-          62,
-          12,
-          15
+          161,
+          14,
+          23
         ]
       }
     ]
