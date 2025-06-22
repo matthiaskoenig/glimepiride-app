@@ -1,145 +1,146 @@
 {
   "type": "grid",
   "data": {
-    "columns": 30,
+    "columns": 27,
     "rowHeight": 12,
-    "maxWidth": 1900,
+    "maxWidth": 1700,
     "bordered": true,
     "cells": [
       {
         "position": [
-          8,
+          0,
           0,
           14,
-          12
-        ]
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": [
-          8,
-          56,
-          9,
-          39
-        ]
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": [
-          8,
-          96,
-          15,
-          64
-        ]
-      },
-      {
-        "position": [
-          8,
-          13,
-          8,
-          42
-        ]
-      },
-      {
-        "position": [
-          16,
-          13,
-          6,
-          42
+          8
         ],
-        "scrollable": true,
+        "side": "left"
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": [
+          0,
+          44,
+          15,
+          35
+        ],
+        "side": "left"
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": [
+          15,
+          8,
+          12,
+          53
+        ],
+        "side": "left"
+      },
+      {
+        "position": [
+          0,
+          8,
+          7,
+          36
+        ]
+      },
+      {
+        "position": [
+          7,
+          8,
+          6,
+          36
+        ],
+        "side": "left"
+      },
+      {
+        "position": [
+          0,
+          96,
+          26,
+          20
+        ],
         "side": "right"
       },
       {
         "position": [
-          8,
-          203,
-          14,
-          33
+          0,
+          81,
+          26,
+          15
         ]
       },
       {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
+        "position": null
+      },
+      {
         "position": [
-          8,
-          184,
-          14,
+          15,
+          61,
+          11,
           19
-        ]
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": null
-      },
-      {
-        "position": [
-          8,
-          161,
-          14,
-          23
-        ]
+        ],
+        "side": "left"
       }
     ]
   }

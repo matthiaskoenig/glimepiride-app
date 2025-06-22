@@ -10,8 +10,8 @@ with app.setup:
     import pandas as pd
     import numpy as np
     mo.md("""
-          # **Welcome to Glimepiride Webapp!**
-          ### A simulation tool for exploring patient-specific pharmacokinetics.
+          <h1 style="margin-bottom: 5px;"><b>Glimepiride Digital Twin</b></h1>
+          <h3 style="margin-top: 0;">A simulation tool for exploring patient-specific pharmacokinetics.</h3>
           """
           )
 
@@ -39,11 +39,11 @@ def load_model():
         "Aurine_m1_m2": 1000.0
     }
     labels = {
-        "time": "<b>Time [hr]</b>",
-        "[Cve_gli]": "<b>Glimepiride Plasma [µM]</b>",
-        "[Cve_m1]": "<b>M1 Plasma [µM]</b>",
-        "[Cve_m2]": "<b>M2 Plasma [µM]</b>",
-        "Aurine_m1_m2": "<b>M1 + M2 Urine [µmole]</b>"
+        "time": "Time [hr]",
+        "[Cve_gli]": "Glimepiride Plasma [µM]",
+        "[Cve_m1]": "M1 Plasma [µM]",
+        "[Cve_m2]": "M2 Plasma [µM]",
+        "Aurine_m1_m2": "M1 + M2 Urine [µmole]"
     }
     return Path, labels, r, units_factors
 
@@ -361,42 +361,6 @@ def patients():
 
 
 @app.cell
-def patients_table_display(load_buttons, saved_patients):
-    # List of dicts for table data
-    table_data = []
-
-    for button_index, (name, config) in enumerate(saved_patients().items()):
-        row_data = {
-            " ": load_buttons[button_index],
-            "Patient": name,
-            "Dose [mg]": int(config["dose"]),
-            "Weight [kg]": config["weight"],
-            "CrCl [mL/min]": int(config["crcl"]),
-            "Cirrhosis [-]": f"{config['cirrhosis']:.2f}",
-            "Allele 1 [%]": int(config["allele1"]),
-            "Allele 2 [%]": int(config["allele2"]),
-        }
-
-        table_data.append(row_data)
-
-    mo.md(
-        f"""
-        ## **Load Example Patients**
-        #### Choose from example patients.
-        {mo.ui.table(
-            table_data,
-            show_column_summaries=False,
-            pagination=True,
-            page_size=5,
-            selection=None,
-            show_download=False
-        )}
-        """
-    )
-    return
-
-
-@app.cell
 def patient_actions(
     saved_patients,
     set_allele1_activity,
@@ -437,7 +401,7 @@ def patient_action_buttons(load_patient, saved_patients):
 
 
 @app.cell
-def display(
+def display_with_tabs(
     BW,
     PODOSE_gli,
     cirrhosis_dropdown,
@@ -447,25 +411,61 @@ def display(
     cyp2c9_allele2_dropdown,
     cyp2c9_allele2_slider,
     f_cirrhosis,
+    load_buttons,
     renal_impairment_dropdown,
+    saved_patients,
 ):
-    mo.md(
-        f"""
-    ## **Input Patient Data**
-    {mo.vstack([
-        mo.md("###**Patient Parameters**"),
+    # Input Patient Data
+    input_patient_content = mo.vstack([
         PODOSE_gli,
         BW,
 
-        mo.md("###**Organ Function**"),
-        mo.hstack([crcl, renal_impairment_dropdown], gap=0),
-        mo.hstack([f_cirrhosis, cirrhosis_dropdown], gap=0),
+        mo.md("####**Organ Function**"),
+        mo.hstack([crcl, renal_impairment_dropdown], gap=5),
+        mo.hstack([f_cirrhosis, cirrhosis_dropdown], gap=5),
 
-        mo.md("###**CYP2C9 Genotype**"),
-        mo.hstack([cyp2c9_allele1_slider, cyp2c9_allele1_dropdown], gap=0),
-        mo.hstack([cyp2c9_allele2_slider, cyp2c9_allele2_dropdown], gap=0)
-    ])}
-    """
+        mo.md("####**CYP2C9 Genotype**"),
+        mo.hstack([cyp2c9_allele1_slider, cyp2c9_allele1_dropdown], gap=5),
+        mo.hstack([cyp2c9_allele2_slider, cyp2c9_allele2_dropdown], gap=5)
+    ])
+
+    # Example Patients table
+    table_data = []
+    for button_index, (name, config) in enumerate(saved_patients().items()):
+        row_data = {
+            " ": load_buttons[button_index],
+            "Patient": name,
+            "Weight [kg]": config["weight"],
+            "CrCl [mL/min]": int(config["crcl"]),
+            "Cirrhosis [-]": f"{config['cirrhosis']:.2f}",
+            "Allele 1 [%]": int(config["allele1"]),
+            "Allele 2 [%]": int(config["allele2"]),
+        }
+        table_data.append(row_data)
+
+    example_patients_content = mo.vstack([
+        mo.ui.table(
+            table_data,
+            show_column_summaries=False,
+            pagination=True,
+            page_size=6,
+            selection=None,
+            show_download=False
+        )
+    ])
+
+    # Create tabs
+    patient_tabs = mo.ui.tabs({
+        "Custom Patient": input_patient_content,
+        "Example Patients": example_patients_content
+    })
+
+    # Display section with tabs
+    mo.md(
+        f"""
+        ### **Patient**
+        {patient_tabs}
+        """
     )
     return
 
@@ -491,8 +491,8 @@ def plots(df, labels):
 
     pio.renderers.default = None # Fix renderer issue
 
-    height = 350
-    width = 420
+    height = 300
+    width = 350
 
     fig1 = px.line(df, x="time", y="[Cve_gli]", title=None, labels=labels, markers=False, range_y=[0, 1], range_x=[0, 25], height=height, width=width)
     fig2 = px.line(df, x="time", y="[Cve_m1]", title=None, labels=labels, markers=False, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
@@ -500,30 +500,36 @@ def plots(df, labels):
     fig4 = px.line(df, x="time", y="Aurine_m1_m2", title=None, labels=labels, markers=False, range_y=[0, 10], height=height, width=width)
 
     axis_style = {
-        "title_font": {"size": 17},
-        "tickfont": {"size": 15}
+        "title_font": {"size": 14},
+        "tickfont": {"size": 12}
     }
 
-    for fig in [fig1, fig2, fig3, fig4]:
+    for fig, y_tick_interval, x_tick_interval in [(fig1, 0.2, 5), (fig2, 0.05, 5), (fig3, 0.05, 5), (fig4, 2, 10)]:
         fig.update_layout(
-            xaxis=axis_style,
-            yaxis=axis_style,
-            plot_bgcolor='white',
-            xaxis_gridcolor='lightgray',
-            yaxis_gridcolor='lightgray',
-            xaxis_showline=True,
-            xaxis_linewidth=1,
-            xaxis_linecolor='black',
-            xaxis_mirror=True,
-            yaxis_showline=True,
-            yaxis_linewidth=1,
-            yaxis_linecolor='black',
-            yaxis_mirror=True
+            xaxis=dict(
+                **axis_style,
+                dtick=x_tick_interval,
+                gridcolor='lightgray',
+                showline=True,
+                linewidth=1,
+                linecolor='black',
+                mirror=True
+            ),
+            yaxis=dict(
+                **axis_style,
+                dtick=y_tick_interval,
+                gridcolor='lightgray',
+                showline=True,
+                linewidth=1,
+                linecolor='black',
+                mirror=True
+            ),
+            plot_bgcolor='white'
         )
         fig.update_traces(line_width=3)
 
     mo.vstack([
-        mo.md("## **Pharmacokinetic Profiles**"),
+        mo.md("#### **Pharmacokinetic Profiles**"),
         mo.vstack([
             mo.hstack([fig1, fig2], gap=0),
             mo.hstack([fig3, fig4], gap=0)
@@ -558,9 +564,11 @@ def model_description():
 def disclaimer():
     mo.md(
         """
-    ## **Disclaimer**
-    The software is provided **AS IS**, without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.<br>
-    This software is a **research proof-of-principle** and not fit for any clinical application. It is not intended to diagnose, treat, or inform medication dosing decisions. Always consult with qualified healthcare professionals for medical advice and treatment planning.
+    <h2 style="color: #666666;"><b>Disclaimer</b></h2>
+    <div style="color: #666666;">
+    The software is provided <b>AS IS</b>, without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.<br>
+    This software is a <b>research proof-of-principle</b> and not fit for any clinical application. It is not intended to diagnose, treat, or inform medication dosing decisions. Always consult with qualified healthcare professionals for medical advice and treatment planning.
+    </div>
     """
     )
     return
@@ -570,11 +578,11 @@ def disclaimer():
 def reference():
     mo.md(
         """
-    ---
-    ## **Reference**
-    **A Digital Twin of Glimepiride for Personalized and Stratified Diabetes Treatment.**<br>
-    _Michelle Elias, Matthias König (2025)_<br>
-    Preprints 2025, 2025061264. (preprint). [doi:10.20944/preprints202506.1264.v1](https://doi.org/10.20944/preprints202506.1264.v1)
+    <hr style="margin-bottom: 10px;">
+    <h2 style="margin-top: 0;"><b>Reference</b></h2>
+    <b>A Digital Twin of Glimepiride for Personalized and Stratified Diabetes Treatment.</b><br>
+    <i>Michelle Elias, Matthias König (2025)</i><br>
+    Preprints 2025, 2025061264. (preprint). <a href="https://doi.org/10.20944/preprints202506.1264.v1">doi:10.20944/preprints202506.1264.v1</a>
     """
     )
     return
@@ -691,8 +699,7 @@ def pk_table_display(pk_results):
 
     mo.md(
         f"""
-        ## **Pharmacokinetic Parameters**
-
+        ####**Pharmacokinetic Parameters**
         {mo.ui.table(
             display_data,
             show_column_summaries=False,
@@ -703,6 +710,7 @@ def pk_table_display(pk_results):
         )}
         """
     )
+
     return
 
 
