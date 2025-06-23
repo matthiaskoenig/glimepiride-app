@@ -3,7 +3,10 @@
 import marimo
 
 __generated_with = "0.13.15"
-app = marimo.App(layout_file="layouts/app.grid.json")
+app = marimo.App(
+    app_title="Glimepiride Digital Twin",
+    layout_file="layouts/app.grid.json",
+)
 
 with app.setup:
     import marimo as mo
@@ -434,7 +437,7 @@ def display_with_tabs(
     for button_index, (name, config) in enumerate(saved_patients().items()):
         row_data = {
             " ": load_buttons[button_index],
-            "Patient": name,
+            "Patient Name": name,
             "Weight [kg]": config["weight"],
             "CrCl [mL/min]": int(config["crcl"]),
             "Cirrhosis [-]": f"{config['cirrhosis']:.2f}",
@@ -452,7 +455,7 @@ def display_with_tabs(
             selection=None,
             show_download=False
         )
-    ])
+    ]).style({"font-size": "0.85em"})
 
     # Create tabs
     patient_tabs = mo.ui.tabs({
@@ -460,13 +463,19 @@ def display_with_tabs(
         "Example Patients": example_patients_content
     })
 
-    # Display section with tabs
     mo.md(
         f"""
-        ### **Patient**
+        ## **Patient Configuration**
         {patient_tabs}
         """
-    )
+    ).style({
+        "background-color": "#fafbfc",  # Lighter grey background
+        "border": "1px solid #f0f0f0",  # Lighter border
+        "border-radius": "8px",
+        "padding": "20px",
+        "margin": "10px 0"
+    })
+
     return
 
 
