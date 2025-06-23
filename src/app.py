@@ -4,19 +4,14 @@ import marimo
 
 __generated_with = "0.13.15"
 app = marimo.App(
-    app_title="Glimepiride Digital Twin",
+    width="full",
+    app_title="Glimepiride Webapp",
     layout_file="layouts/app.grid.json",
 )
 
 with app.setup:
     import marimo as mo
     import pandas as pd
-    import numpy as np
-    mo.md("""
-          <h1 style="margin-bottom: 5px;"><b>Glimepiride Digital Twin</b></h1>
-          <h3 style="margin-top: 0;">A simulation tool for exploring patient-specific pharmacokinetics.</h3>
-          """
-          )
 
 
 @app.cell
@@ -185,7 +180,6 @@ def cyp2c9_allele_sliders(
         stop=100,
         value=allele1_activity(),
         step=1.0,
-        label="CYP2C9 Allele 1 Activity [%]",
         on_change=set_allele1_activity
     )
 
@@ -194,7 +188,6 @@ def cyp2c9_allele_sliders(
         stop=100,
         value=allele2_activity(),
         step=1.0,
-        label="CYP2C9 Allele 2 Activity [%]",
         on_change=set_allele2_activity
     )
 
@@ -208,7 +201,6 @@ def cirrhosis_slider(cirrhosis_degree, set_cirrhosis_degree):
         stop=0.95,
         value=cirrhosis_degree(),
         step=0.01,
-        label="Cirrhosis Degree [-]",
         on_change=set_cirrhosis_degree
     )
 
@@ -222,7 +214,6 @@ def crcl_slider(crcl_value, set_crcl_value):
         stop=110,
         value=crcl_value(),
         step=1.0,
-        label="Creatinine Clearance [mL/min]",
         on_change=set_crcl_value
     )
     return (crcl,)
@@ -236,7 +227,6 @@ def dose_slider(dose_value, set_dose_value):
         value=dose_value(),
         on_change=set_dose_value,
         step=1.0,
-        label="Glimepiride Dose [mg]"
     )
     return (PODOSE_gli,)
 
@@ -248,7 +238,6 @@ def bodyweight_slider(bw_value, set_bw_value):
         stop=170.0,
         value=bw_value(),
         on_change=set_bw_value,
-        label="Bodyweight [kg]"
     )
 
     return (BW,)
@@ -418,18 +407,51 @@ def display_with_tabs(
     renal_impairment_dropdown,
     saved_patients,
 ):
+    # Fixed width for all labels
+    label_style = {"width": "240px", "text-align": "right", "padding-right": "30px"}
+
     # Input Patient Data
     input_patient_content = mo.vstack([
-        PODOSE_gli,
-        BW,
+
+        mo.md("####**Anthropometrics & Dose**"),
+
+        mo.hstack([
+            mo.md("Glimepiride Dose [mg]").style(label_style),
+            PODOSE_gli.style({"width": "550px"})
+        ], align="center", gap=0),
+
+        mo.hstack([
+            mo.md("Bodyweight [kg]").style(label_style),
+            BW.style({"width": "550px"})
+        ], align="center", gap=0),
 
         mo.md("####**Organ Function**"),
-        mo.hstack([crcl, renal_impairment_dropdown], gap=5),
-        mo.hstack([f_cirrhosis, cirrhosis_dropdown], gap=5),
+
+        mo.hstack([
+            mo.md("Creatinine Clearance [mL/min]").style(label_style),
+            crcl.style({"width": "360px"}),
+            renal_impairment_dropdown
+        ], align="center", gap=0),
+
+        mo.hstack([
+            mo.md("Cirrhosis Degree [-]").style(label_style),
+            f_cirrhosis.style({"width": "390px"}),
+            cirrhosis_dropdown
+        ], align="center", gap=0),
 
         mo.md("####**CYP2C9 Genotype**"),
-        mo.hstack([cyp2c9_allele1_slider, cyp2c9_allele1_dropdown], gap=5),
-        mo.hstack([cyp2c9_allele2_slider, cyp2c9_allele2_dropdown], gap=5)
+
+        mo.hstack([
+            mo.md("CYP2C9 Allele 1 Activity [%]").style(label_style),
+            cyp2c9_allele1_slider.style({"width": "440px"}),
+            cyp2c9_allele1_dropdown
+        ], align="center", gap=0),
+
+        mo.hstack([
+            mo.md("CYP2C9 Allele 2 Activity [%]").style(label_style),
+            cyp2c9_allele2_slider.style({"width": "440px"}),
+            cyp2c9_allele2_dropdown
+        ], align="center", gap=0)
     ])
 
     # Example Patients table
@@ -465,12 +487,12 @@ def display_with_tabs(
 
     mo.md(
         f"""
-        ## **Patient Configuration**
+        ## **Patient**
         {patient_tabs}
         """
     ).style({
-        "background-color": "#fafbfc",  # Lighter grey background
-        "border": "1px solid #f0f0f0",  # Lighter border
+        "background-color": "#fafbfc",
+        "border": "1px solid #f0f0f0",
         "border-radius": "8px",
         "padding": "20px",
         "margin": "10px 0"
@@ -500,8 +522,8 @@ def plots(df, labels):
 
     pio.renderers.default = None # Fix renderer issue
 
-    height = 300
-    width = 350
+    height = 340
+    width = 380
 
     fig1 = px.line(df, x="time", y="[Cve_gli]", title=None, labels=labels, markers=False, range_y=[0, 1], range_x=[0, 25], height=height, width=width)
     fig2 = px.line(df, x="time", y="[Cve_m1]", title=None, labels=labels, markers=False, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
@@ -538,60 +560,64 @@ def plots(df, labels):
         fig.update_traces(line_width=3)
 
     mo.vstack([
-        mo.md("#### **Pharmacokinetic Profiles**"),
         mo.vstack([
             mo.hstack([fig1, fig2], gap=0),
             mo.hstack([fig3, fig4], gap=0)
-        ])
+        ], gap=0)
     ])
 
     return
 
 
 @app.cell
-def model_image(Path):
+def model_display(Path):
     model_img_path = Path(__file__).parent.parent / "model" / "glimepiride_model.png"
-    mo.image(src=str(model_img_path))
-    return
 
+    image = mo.image(src=str(model_img_path))
 
-@app.cell
-def model_description():
-    mo.md(
+    description = mo.md(
         """
-    ####**Whole-body PBPK model of glimepiride.** </br>
-    **A)** Whole-body model illustrating glimepiride (GLI) administration, its systemic circulation via venous and arterial blood, and the key organs (liver, kidney, GI tract) involved in GLI metabolism, distribution, and excretion.
-    **B)** Intestinal model showing dissolution and absorption of GLI by enterocytes. No enterohepatic circulation of M1 and M2 is assumed, but reverse transport via enterocytes is included.
-    **C)** Hepatic model depicting CYP2C9-mediated metabolism of GLI to M1 and M2.
-    **D)** Renal model highlighting the elimination of M1 and M2 via urine; unchanged GLI is not excreted renally.
+    #**Glimepiride Digital Twin** </br>
+    ###**Whole-body PBPK Model**</br>
+    **A)** Whole-body PBPK model illustrating glimepiride (GLI) administration, its systemic circulation via venous and arterial blood, and the key organs (liver, kidney, GI tract) involved in GLI metabolism, distribution, and excretion.</br>
+    **B)** Intestinal model showing dissolution and absorption of GLI by enterocytes. No enterohepatic circulation of M1 and M2 is assumed, but reverse transport via enterocytes is included.</br>
+    **C)** Hepatic model depicting CYP2C9-mediated metabolism of GLI to M1 and M2.</br>
+    **D)** Renal model highlighting the elimination of M1 and M2 via urine; unchanged GLI is not excreted renally.</br>
+    **E)** Key factors influencing glimepiride disposition accounted for by the model: administered dose, bodyweight, renal impairment, liver function (cirrhosis), and CYP2C9 genotypes.</br>
     """
     )
-    return
 
-
-@app.cell
-def disclaimer():
-    mo.md(
+    reference = mo.md(
         """
-    <h2 style="color: #666666;"><b>Disclaimer</b></h2>
-    <div style="color: #666666;">
-    The software is provided <b>AS IS</b>, without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.<br>
-    This software is a <b>research proof-of-principle</b> and not fit for any clinical application. It is not intended to diagnose, treat, or inform medication dosing decisions. Always consult with qualified healthcare professionals for medical advice and treatment planning.
-    </div>
-    """
-    )
+        <div style="color: #888888;">
+        <h3 style="color: #888888;"><b>Reference</b></h3>
+        <b>A Digital Twin of Glimepiride for Personalized and Stratified Diabetes Treatment.</b><br>
+        <i>Michelle Elias, Matthias König (2025)</i><br>
+        Preprints 2025, 2025061264. (preprint). <a href="https://doi.org/10.20944/preprints202506.1264.v1">doi:10.20944/preprints202506.1264.v1</a>
+        </div>
+        """
+        )
+
+
+    mo.hstack([
+        image.style({"flex": "0 0 22%"}),
+        mo.vstack([description, reference]).style({"flex": "1 1 60%"})
+    ], gap=2)
+
+
     return
 
 
 @app.cell
-def reference():
+def reference_and_disclaimer():
     mo.md(
         """
     <hr style="margin-bottom: 10px;">
-    <h2 style="margin-top: 0;"><b>Reference</b></h2>
-    <b>A Digital Twin of Glimepiride for Personalized and Stratified Diabetes Treatment.</b><br>
-    <i>Michelle Elias, Matthias König (2025)</i><br>
-    Preprints 2025, 2025061264. (preprint). <a href="https://doi.org/10.20944/preprints202506.1264.v1">doi:10.20944/preprints202506.1264.v1</a>
+    <h2 style="color: #888888;"><b>Disclaimer</b></h2>
+    <div style="color: #888888;">
+    The software is provided <b>AS IS</b>, without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.<br>
+    This software is a <b>research proof-of-principle</b> and not fit for any clinical application. It is not intended to diagnose, treat, or inform medication dosing decisions. Always consult with qualified healthcare professionals for medical advice and treatment planning.
+    </div>
     """
     )
     return
@@ -708,7 +734,6 @@ def pk_table_display(pk_results):
 
     mo.md(
         f"""
-        ####**Pharmacokinetic Parameters**
         {mo.ui.table(
             display_data,
             show_column_summaries=False,
