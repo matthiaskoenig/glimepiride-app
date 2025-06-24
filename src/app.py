@@ -4,7 +4,7 @@ import marimo
 
 __generated_with = "0.13.15"
 app = marimo.App(
-    width="full",
+    width="medium",
     app_title="Glimepiride Webapp",
     layout_file="layouts/app.grid.json",
 )
@@ -37,11 +37,11 @@ def load_model():
         "Aurine_m1_m2": 1000.0
     }
     labels = {
-        "time": "Time [hr]",
-        "[Cve_gli]": "Glimepiride Plasma [µM]",
-        "[Cve_m1]": "M1 Plasma [µM]",
-        "[Cve_m2]": "M2 Plasma [µM]",
-        "Aurine_m1_m2": "M1 + M2 Urine [µmole]"
+        "time": "<b>Time [hr]</b>",
+        "[Cve_gli]": "<b>Glimepiride Plasma [µM]</b>",
+        "[Cve_m1]": "<b>M1 Plasma [µM]</b>",
+        "[Cve_m2]": "<b>M2 Plasma [µM]</b>",
+        "Aurine_m1_m2": "<b>M1 + M2 Urine [µmole]</b>"
     }
     return Path, labels, r, units_factors
 
@@ -408,7 +408,7 @@ def display_with_tabs(
     saved_patients,
 ):
     # Fixed width for all labels
-    label_style = {"width": "240px", "text-align": "right", "padding-right": "30px"}
+    label_style = {"width": "280px", "text-align": "left", "padding-right": "60px"}
 
     # Input Patient Data
     input_patient_content = mo.vstack([
@@ -417,40 +417,40 @@ def display_with_tabs(
 
         mo.hstack([
             mo.md("Glimepiride Dose [mg]").style(label_style),
-            PODOSE_gli.style({"width": "550px"})
+            PODOSE_gli.style({"width": "535px"})
         ], align="center", gap=0),
 
         mo.hstack([
             mo.md("Bodyweight [kg]").style(label_style),
-            BW.style({"width": "550px"})
+            BW.style({"width": "535px"})
         ], align="center", gap=0),
 
         mo.md("####**Organ Function**"),
 
         mo.hstack([
             mo.md("Creatinine Clearance [mL/min]").style(label_style),
-            crcl.style({"width": "360px"}),
-            renal_impairment_dropdown
+            crcl.style({"width": "230px"}),
+            renal_impairment_dropdown.style({"width": "300px"})
         ], align="center", gap=0),
 
         mo.hstack([
             mo.md("Cirrhosis Degree [-]").style(label_style),
-            f_cirrhosis.style({"width": "390px"}),
-            cirrhosis_dropdown
+            f_cirrhosis.style({"width": "230px"}),
+            cirrhosis_dropdown.style({"width": "300px"})
         ], align="center", gap=0),
 
         mo.md("####**CYP2C9 Genotype**"),
 
         mo.hstack([
             mo.md("CYP2C9 Allele 1 Activity [%]").style(label_style),
-            cyp2c9_allele1_slider.style({"width": "440px"}),
-            cyp2c9_allele1_dropdown
+            cyp2c9_allele1_slider.style({"width": "220px"}),
+            cyp2c9_allele1_dropdown.style({"width": "300px"})
         ], align="center", gap=0),
 
         mo.hstack([
             mo.md("CYP2C9 Allele 2 Activity [%]").style(label_style),
-            cyp2c9_allele2_slider.style({"width": "440px"}),
-            cyp2c9_allele2_dropdown
+            cyp2c9_allele2_slider.style({"width": "220px"}),
+            cyp2c9_allele2_dropdown.style({"width": "300px"})
         ], align="center", gap=0)
     ])
 
