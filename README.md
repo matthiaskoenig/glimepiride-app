@@ -1,31 +1,38 @@
 # Glimepiride webapp
+This repository contains the code of the digital twin of glimepiride.
+The model repository is available from [https://github.com/matthiaskoenig/glimepiride-model.git](https://github.com/matthiaskoenig/glimepiride-model.git).
 
-## Installation
+# Local Development
+### Installation
+Use `uv` to setup the dependencies
 ```
 uv venv
 uv sync
 ```
 
-## Edit app
-```bash
-cd src
-marimo edit app.py
-```
-
-## Run app
+### Run app
+To run the app locally use
 ```bash
 cd src
 marimo run app.py 
 ```
 
-## Deployment
+### Edit app
+To modify the app use
+```bash
+cd src
+marimo edit app.py
+```
+
+
+# Deployment
+## Freeze requirements for deployment
 Create requirements
 ```bash
 uv pip compile pyproject.toml -o requirements.txt
 ```
 
-
-# Setup proxy
+## Setup proxy
 - login to proxy server `denbi-head`
 
 **Activate page**  
