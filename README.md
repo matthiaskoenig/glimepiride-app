@@ -2,8 +2,19 @@
 This repository contains the code of the digital twin of glimepiride.
 The model repository is available from [https://github.com/matthiaskoenig/glimepiride-model.git](https://github.com/matthiaskoenig/glimepiride-model.git).
 
-# Local Development
-### Installation
+## Run with docker
+```bash
+# Build your image, and tag it as my_app
+docker build -t glimepiride_app .
+
+# Start your container, mapping port 8080
+docker run -p 4567:8080 -it glimepiride_app
+
+```
+The app is then available from http://localhost:4567
+
+
+### Local Installation
 Use `uv` to setup the dependencies
 ```
 uv venv
@@ -17,7 +28,8 @@ cd src
 marimo run app.py 
 ```
 
-### Edit app
+# Local Development
+## Edit app
 To modify the app use
 ```bash
 cd src
@@ -25,7 +37,7 @@ marimo edit app.py
 ```
 
 
-# Deployment
+# Server deployment
 ## Freeze requirements for deployment
 Create requirements
 ```bash
