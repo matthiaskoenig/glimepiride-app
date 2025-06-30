@@ -1,0 +1,22 @@
+# -----------------------------------------------------------------------------
+# DOCKER COMPOSE DEPLOYMENT
+# -----------------------------------------------------------------------------
+# build containers
+#   sudo docker compose -f docker-compose.yml build --no-cache
+#   sudo docker compose -f docker-compose.yml build
+# serve containers
+#   sudo docker compose -f docker-compose.yml up
+#   sudo docker compose -f docker-compose.yml up --detach
+# -----------------------------------------------------------------------------
+
+services:
+
+  backend:
+    restart: always
+    build: .
+    volumes:
+      - .:/code
+    expose:
+      - "4567"
+    ports:
+      - "4567:8080"
