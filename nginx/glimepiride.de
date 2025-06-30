@@ -49,13 +49,18 @@ server {
         send_timeout                900;
 
         location / {
-                # return 200 "ssl on proxy";
-                # denbi-cloud: node2
+                # denbi-cloud: node5
                 proxy_pass http://192.168.0.60:4567;
-                proxy_set_header HOST $host;
+                proxy_set_header Host $host;
                 proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-for $remote_addr;
-                proxy_set_header X-Forwarded-Proto https;
+                proxy_set_header X-Forwarded-for $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
                 port_in_redirect off;
+
+                # Required for WebSocket support
+                proxy_http_version  1.1;
+                proxy_set_header    Upgrade $http_upgrade;
+                proxy_set_header    Connection "upgrade";
+                proxy_read_timeout  600;
         }
 }
