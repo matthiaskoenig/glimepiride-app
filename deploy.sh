@@ -9,4 +9,4 @@ docker image rm -f glimepiride-app_backend:latest
 # cleanup all dangling images, containers, volumes and networks
 docker system prune --force
 
-docker-compose -f docker-compose.yml up --force-recreate --always-recreate-deps --build --detach
+docker compose -f docker-compose.yml up --force-recreate --always-recreate-deps --build --detach
