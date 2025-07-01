@@ -2,9 +2,9 @@
 
 import marimo
 
-__generated_with = "0.13.15"
+__generated_with = "0.14.9"
 app = marimo.App(
-    width="medium",
+    width="full",
     app_title="Glimepiride Webapp",
     layout_file="layouts/app.grid.json",
 )
@@ -407,8 +407,7 @@ def display_with_tabs(
     renal_impairment_dropdown,
     saved_patients,
 ):
-    # Fixed width for all labels
-    label_style = {"width": "280px", "text-align": "left", "padding-right": "60px"}
+    label_style = {"flex": "1 1 250px", "text-align": "left", "padding-right": "10px"}
 
     # Input Patient Data
     input_patient_content = mo.vstack([
@@ -417,41 +416,41 @@ def display_with_tabs(
 
         mo.hstack([
             mo.md("Glimepiride Dose [mg]").style(label_style),
-            PODOSE_gli.style({"width": "535px"})
-        ], align="center", gap=0),
+            PODOSE_gli.style({"flex": "2 1 340px"})
+        ], align="center", gap=1, wrap=True),
 
         mo.hstack([
             mo.md("Bodyweight [kg]").style(label_style),
-            BW.style({"width": "535px"})
-        ], align="center", gap=0),
+            BW.style({"flex": "2 1 340px"})
+        ], align="center", gap=1, wrap=True),
 
         mo.md("####**Organ Function**"),
 
         mo.hstack([
-            mo.md("Creatinine Clearance [mL/min]").style(label_style),
-            crcl.style({"width": "230px"}),
-            renal_impairment_dropdown.style({"width": "300px"})
-        ], align="center", gap=0),
+            mo.md("Creatinine Clearance [mL/min]").style({"flex": "2 1 200px", "text-align": "left"}),
+            crcl.style({"flex": "2 1 150px"}),
+            renal_impairment_dropdown.style({"flex": "1 1 150px"})
+        ], align="center", gap=1, wrap=True),
 
         mo.hstack([
-            mo.md("Cirrhosis Degree [-]").style(label_style),
-            f_cirrhosis.style({"width": "230px"}),
-            cirrhosis_dropdown.style({"width": "300px"})
-        ], align="center", gap=0),
+            mo.md("Cirrhosis Degree [-]").style({"flex": "2 1 200px", "text-align": "left"}),
+            f_cirrhosis.style({"flex": "2 1 150px"}),
+            cirrhosis_dropdown.style({"flex": "1 1 150px"})
+        ], align="center", gap=1, wrap=True),
 
         mo.md("####**CYP2C9 Genotype**"),
 
         mo.hstack([
-            mo.md("CYP2C9 Allele 1 Activity [%]").style(label_style),
-            cyp2c9_allele1_slider.style({"width": "220px"}),
-            cyp2c9_allele1_dropdown.style({"width": "300px"})
-        ], align="center", gap=0),
+            mo.md("CYP2C9 Allele 1 Activity [%]").style({"flex": "2 1 200px", "text-align": "left"}),
+            cyp2c9_allele1_slider.style({"flex": "2 1 150px"}),
+            cyp2c9_allele1_dropdown.style({"flex": "1 1 150px"})
+        ], align="center", gap=1, wrap=True),
 
         mo.hstack([
-            mo.md("CYP2C9 Allele 2 Activity [%]").style(label_style),
-            cyp2c9_allele2_slider.style({"width": "220px"}),
-            cyp2c9_allele2_dropdown.style({"width": "300px"})
-        ], align="center", gap=0)
+            mo.md("CYP2C9 Allele 2 Activity [%]").style({"flex": "2 1 200px", "text-align": "left"}),
+            cyp2c9_allele2_slider.style({"flex": "2 1 150px"}),
+            cyp2c9_allele2_dropdown.style({"flex": "1 1 150px"})
+        ], align="center", gap=1, wrap=True)
     ])
 
     # Example Patients table
@@ -485,7 +484,7 @@ def display_with_tabs(
         "Example Patients": example_patients_content
     })
 
-    mo.md(
+    display_with_tabs = mo.md(
         f"""
         ## **Patient**
         {patient_tabs}
@@ -498,7 +497,7 @@ def display_with_tabs(
         "margin": "10px 0"
     })
 
-    return
+    return (display_with_tabs,)
 
 
 @app.cell
@@ -559,14 +558,15 @@ def plots(df, labels):
         )
         fig.update_traces(line_width=3)
 
-    mo.vstack([
+
+    plots = mo.vstack([
         mo.vstack([
-            mo.hstack([fig1, fig2], gap=0),
-            mo.hstack([fig3, fig4], gap=0)
+            mo.hstack([fig1, fig2], gap=0, wrap=True),
+            mo.hstack([fig3, fig4], gap=0, wrap=True)
         ], gap=0)
     ])
 
-    return
+    return (plots,)
 
 
 @app.cell
@@ -599,18 +599,17 @@ def model_display(Path):
         )
 
 
-    mo.hstack([
-        image.style({"flex": "0 0 22%"}),
-        mo.vstack([description, reference]).style({"flex": "1 1 60%"})
-    ], gap=2)
+    model_display = mo.hstack([
+        image.style({"flex": "1 1 25%", "min-width": "250px"}),
+        mo.vstack([description, reference]).style({"flex": "2 2 68%"})
+    ], gap=2, wrap=True)
 
-
-    return
+    return (model_display,)
 
 
 @app.cell
-def reference_and_disclaimer():
-    mo.md(
+def disclaimer():
+    disclaimer = mo.md(
         """
     <hr style="margin-bottom: 10px;">
     <h2 style="color: #888888;"><b>Disclaimer</b></h2>
@@ -620,7 +619,7 @@ def reference_and_disclaimer():
     </div>
     """
     )
-    return
+    return (disclaimer,)
 
 
 @app.cell
@@ -732,7 +731,7 @@ def pk_table_display(pk_results):
                 row[key] = value
         display_data.append(row)
 
-    mo.md(
+    pk_table_display = mo.md(
         f"""
         {mo.ui.table(
             display_data,
@@ -744,6 +743,36 @@ def pk_table_display(pk_results):
         )}
         """
     )
+
+    return (pk_table_display,)
+
+
+@app.cell
+def main_layout(
+    disclaimer,
+    display_with_tabs,
+    model_display,
+    pk_table_display,
+    plots,
+):
+    mo.vstack([
+        # Header
+        model_display,
+
+        mo.hstack([
+            # Left: Input + PK table
+            mo.vstack([
+                display_with_tabs,
+                pk_table_display
+            ]).style({"flex": "1 1 300px"}),
+
+            # Right: Plots
+            plots.style({"flex": "1 1 600px"})
+        ], gap=0, wrap=True),
+
+        # Footer
+        disclaimer
+    ])
 
     return
 
