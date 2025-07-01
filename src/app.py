@@ -577,20 +577,22 @@ def model_display(Path):
 
     description = mo.md(
         """
-    #**Glimepiride Digital Twin** </br>
-    ###**Whole-body PBPK Model**</br>
-    **A)** Whole-body PBPK model illustrating glimepiride (GLI) administration, its systemic circulation via venous and arterial blood, and the key organs (liver, kidney, GI tract) involved in GLI metabolism, distribution, and excretion.</br>
-    **B)** Intestinal model showing dissolution and absorption of GLI by enterocytes. No enterohepatic circulation of M1 and M2 is assumed, but reverse transport via enterocytes is included.</br>
-    **C)** Hepatic model depicting CYP2C9-mediated metabolism of GLI to M1 and M2.</br>
-    **D)** Renal model highlighting the elimination of M1 and M2 via urine; unchanged GLI is not excreted renally.</br>
-    **E)** Key factors influencing glimepiride disposition accounted for by the model: administered dose, bodyweight, renal impairment, liver function (cirrhosis), and CYP2C9 genotypes.</br>
-    """
+        <h1 style="margin-bottom: 0.25em;"><b>Glimepiride Digital Twin</b></h1>
+        <h3 style="margin-bottom: 0.2em; margin-top: 1.0em"><b>Whole-body PBPK Model</b></h3>
+        <p style="margin-top: 0;">
+        <b>A)</b> Whole-body PBPK model illustrating glimepiride (GLI) administration, its systemic circulation via venous and arterial blood, and the key organs (liver, kidney, GI tract) involved in GLI metabolism, distribution, and excretion.<br>
+        <b>B)</b> Intestinal model showing dissolution and absorption of GLI by enterocytes. No enterohepatic circulation of M1 and M2 is assumed, but reverse transport via enterocytes is included.<br>
+        <b>C)</b> Hepatic model depicting CYP2C9-mediated metabolism of GLI to M1 and M2.<br>
+        <b>D)</b> Renal model highlighting the elimination of M1 and M2 via urine; unchanged GLI is not excreted renally.<br>
+        <b>E)</b> Key factors influencing glimepiride disposition accounted for by the model: administered dose, bodyweight, renal impairment, liver function (cirrhosis), and CYP2C9 genotypes.
+        </p>
+        """
     )
 
     reference = mo.md(
         """
         <div style="color: #888888;">
-        <h3 style="color: #888888;"><b>Reference</b></h3>
+        <h3 style="color: #888888; margin-bottom: 0.5em; margin-top: 1.0em"><b>Reference</b></h3>
         <b>A Digital Twin of Glimepiride for Personalized and Stratified Diabetes Treatment.</b><br>
         <i>Michelle Elias, Matthias König (2025)</i><br>
         Preprints 2025, 2025061264. (preprint). <a href="https://doi.org/10.20944/preprints202506.1264.v1">doi:10.20944/preprints202506.1264.v1</a>
@@ -600,9 +602,9 @@ def model_display(Path):
 
 
     model_display = mo.hstack([
-        image.style({"flex": "1 1 25%", "min-width": "250px"}),
-        mo.vstack([description, reference]).style({"flex": "2 2 68%"})
-    ], gap=2, wrap=True)
+        image.style({"flex": "1 1 28%", "min-width": "250px", "max-width": "350px"}),
+        mo.vstack([description, reference], gap=0).style({"flex": "2 2 70%", "max-width": "700px"})
+    ], gap=1, wrap=True)
 
     return (model_display,)
 
