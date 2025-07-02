@@ -521,8 +521,8 @@ def plots(df, labels):
 
     pio.renderers.default = None # Fix renderer issue
 
-    height = 340
-    width = 380
+    height = 350
+    width = 410
 
     fig1 = px.line(df, x="time", y="[Cve_gli]", title=None, labels=labels, markers=False, range_y=[0, 1], range_x=[0, 25], height=height, width=width)
     fig2 = px.line(df, x="time", y="[Cve_m1]", title=None, labels=labels, markers=False, range_y=[0, 0.2], range_x=[0, 25], height=height, width=width)
@@ -558,13 +558,7 @@ def plots(df, labels):
         )
         fig.update_traces(line_width=3)
 
-
-    plots = mo.vstack([
-        mo.vstack([
-            mo.hstack([fig1, fig2], gap=0, wrap=True),
-            mo.hstack([fig3, fig4], gap=0, wrap=True)
-        ], gap=0)
-    ])
+    plots = mo.hstack([fig1, fig2, fig3, fig4], gap=0.5, wrap=True)
 
     return (plots,)
 
@@ -768,16 +762,14 @@ def main_layout(
         # Header
         model_display,
 
-        mo.hstack([
-            # Left: Input + PK table
-            mo.vstack([
-                display_with_tabs,
-                pk_table_display
-            ]).style({"flex": "1 1 300px"}),
+        # Patient input and PK table
+        mo.vstack([
+            display_with_tabs,
+            pk_table_display
+        ]),
 
-            # Right: Plots
-            plots.style({"flex": "1 1 600px"})
-        ], gap=0, wrap=True),
+        # Plots
+        plots,
 
         # Footer
         reference_disclaimer
