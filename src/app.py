@@ -412,7 +412,7 @@ def display_with_tabs(
     # Input Patient Data
     input_patient_content = mo.vstack([
 
-        mo.md("####**Anthropometrics & Dose**"),
+        mo.md("####**Anthropometrics & Dose**").style({"margin-top": "10px"}),
 
         mo.hstack([
             mo.md("Glimepiride Dose [mg]").style(label_style),
@@ -424,7 +424,7 @@ def display_with_tabs(
             BW.style({"flex": "2 1 340px"})
         ], align="center", gap=1, wrap=True),
 
-        mo.md("####**Organ Function**"),
+        mo.md("####**Organ Function**").style({"margin-top": "10px"}),
 
         mo.hstack([
             mo.md("Creatinine Clearance [mL/min]").style({"flex": "2 1 200px", "text-align": "left"}),
@@ -438,7 +438,7 @@ def display_with_tabs(
             cirrhosis_dropdown.style({"flex": "1 1 150px"})
         ], align="center", gap=1, wrap=True),
 
-        mo.md("####**CYP2C9 Genotype**"),
+        mo.md("####**CYP2C9 Genotype**").style({"margin-top": "10px"}),
 
         mo.hstack([
             mo.md("CYP2C9 Allele 1 Activity [%]").style({"flex": "2 1 200px", "text-align": "left"}),
@@ -589,39 +589,46 @@ def model_display(Path):
         """
     )
 
-    reference = mo.md(
-        """
-        <div style="color: #888888;">
-        <h3 style="color: #888888; margin-bottom: 0.5em; margin-top: 1.0em"><b>Reference</b></h3>
-        <b>A Digital Twin of Glimepiride for Personalized and Stratified Diabetes Treatment.</b><br>
-        <i>Michelle Elias, Matthias König (2025)</i><br>
-        Preprints 2025, 2025061264. (preprint). <a href="https://doi.org/10.20944/preprints202506.1264.v1">doi:10.20944/preprints202506.1264.v1</a>
-        </div>
-        """
-        )
-
-
     model_display = mo.hstack([
         image.style({"flex": "1 1 28%", "min-width": "250px", "max-width": "350px"}),
-        mo.vstack([description, reference], gap=0).style({"flex": "2 2 70%", "max-width": "700px"})
+        description.style({"flex": "2 2 70%", "max-width": "700px"})
     ], gap=1, wrap=True)
 
     return (model_display,)
 
 
 @app.cell
-def disclaimer():
-    disclaimer = mo.md(
+def reference_disclaimer():
+    reference = mo.md(
         """
-    <hr style="margin-bottom: 10px;">
-    <h2 style="color: #888888;"><b>Disclaimer</b></h2>
-    <div style="color: #888888;">
-    The software is provided <b>AS IS</b>, without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.<br>
-    This software is a <b>research proof-of-principle</b> and not fit for any clinical application. It is not intended to diagnose, treat, or inform medication dosing decisions. Always consult with qualified healthcare professionals for medical advice and treatment planning.
-    </div>
-    """
+        <div style="color: #888888;">
+        <h3 style="color: #888888; margin-bottom: 0.2em; margin-top: 1.0em"><b>Reference</b></h3>
+        <b>A Digital Twin of Glimepiride for Personalized and Stratified Diabetes Treatment.</b><br>
+        <i>Michelle Elias, Matthias König (2025)</i><br>
+        Preprints 2025, 2025061264. (preprint). <a href="https://doi.org/10.20944/preprints202506.1264.v1">doi:10.20944/preprints202506.1264.v1</a>
+        </div>
+        """
     )
-    return (disclaimer,)
+
+    disclaimer_text = mo.md(
+        """
+        <h3 style="color: #888888; margin-bottom: 0.2em; margin-top: 1.0em"><b>Disclaimer</b></h3>
+        <div style="color: #888888;">
+        The software is provided <b>AS IS</b>, without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.<br>
+        This software is a <b>research proof-of-principle</b> and not fit for any clinical application. It is not intended to diagnose, treat, or inform medication dosing decisions. Always consult with qualified healthcare professionals for medical advice and treatment planning.
+        </div>
+        """
+    )
+
+    reference_disclaimer = mo.md(
+        f"""
+        <hr style="margin-bottom: 10px;">
+        {reference}
+        {disclaimer_text}
+        """
+    )
+
+    return (reference_disclaimer,)
 
 
 @app.cell
@@ -751,7 +758,7 @@ def pk_table_display(pk_results):
 
 @app.cell
 def main_layout(
-    disclaimer,
+    reference_disclaimer,
     display_with_tabs,
     model_display,
     pk_table_display,
@@ -773,7 +780,7 @@ def main_layout(
         ], gap=0, wrap=True),
 
         # Footer
-        disclaimer
+        reference_disclaimer
     ])
 
     return
