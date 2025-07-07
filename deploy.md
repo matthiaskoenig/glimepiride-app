@@ -45,6 +45,7 @@ git clone https://github.com/matthiaskoenig/glimepiride-app.git
 ```
 
 ```bash
-# start containers
+# redeploy the app
+cd /var/git/glimepiride-app
 ./deploy.sh
 ```
